@@ -1,0 +1,147 @@
+<html>
+
+	<head>
+		<title>WebGL - Canvas test</title>
+		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
+
+		<link rel="stylesheet" type="text/css" href="styles/gstyle.css">
+
+		<script type="text/javascript" src="scripts/glMatrix.js"></script>
+		<script type="text/javascript" src="scripts/callbacks.js"></script>
+		<script type="text/javascript" src="scripts/selector.js"></script>
+		<script type="text/javascript" src="scripts/renderer.js"></script>
+		<script type="text/javascript" src="scripts/objLoader.js"></script>
+		<script type="text/javascript" src="scripts/3dObjects.js"></script>
+		<script type="text/javascript" src="scripts/heightmap.js"></script>
+
+		<script type="text/javascript">
+			function loadBody() {
+				document.getElementById("posX").value = 0;
+				document.getElementById("posY").value = 0;
+				document.getElementById("posZ").value = 0;
+				document.getElementById("rotX").value = 0;
+				document.getElementById("rotY").value = 0;
+				document.getElementById("rotZ").value = 0;
+				document.getElementById("color").value = "#ffffff";
+				webGLStart();
+			}	
+		</script>
+	</head>
+	<body onload="loadBody();">
+		<div class="container" id="left-container">
+			<div id="position-rotation-modifier">
+				<table>
+					<thead>
+						<tr>
+							<th>Position :</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>X :</td>
+							<td>
+								<input type="range" id="posX" min="-2.5" max="2.5" value="0" step="0.01" oninput="changePosition()">
+							</td>
+						</tr>
+						<tr>
+							<td>Y :</td>
+							<td>
+								<input type="range" id="posY" min="-2.5" max="2.5" value="0" step="0.01" oninput="changePosition()">
+							</td>
+						</tr>
+						<tr>
+							<td>Z :</td>
+							<td>
+								<input type="range" id="posZ" min="-2.5" max="2.5" value="0" step="0.01" oninput="changePosition()">
+							</td>
+						</tr>
+					</tbody>
+					<thead>
+						<tr>
+							<th>Rotation :</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>X :</td>
+							<td>
+								<input type="range" id="rotX" min="-180" max="180" value="0" step="1" oninput="changeRotation()">
+							</td>
+						</tr>
+						<tr>
+							<td>Y :</td>
+							<td>
+								<input type="range" id="rotY" min="-180" max="180" value="0" step="1" oninput="changeRotation()">
+							</td>
+						</tr>
+						<tr>
+							<td>Z :</td>
+							<td>
+								<input type="range" id="rotZ" min="-180" max="180" value="0" step="1" oninput="changeRotation()">
+							</td>
+						</tr>
+					</tbody>
+					<thead>
+						<tr>
+							<th>Color :</th>
+							<th>
+								<input type="color" id="color" value="#ffffff" onchange="changeColor()">
+							</th>
+						</tr>
+					</thead>
+				</table>
+			</div>
+		</div>
+		<div class="container" id="center-container">
+			<canvas class="content" id="WebGL-test" style="border:none;" width="3840" height="2160" oncontextmenu="return false;"></canvas>
+			<div class="content hcontainer">
+				<div id="hm-left-part" class="content">
+					<h1>Heightmap</h1>
+					<h2 class="content">From Texture</h2>
+					<div id="objects-selector">
+						<button onclick="loadImage('texture1.png')">Texture 1</button>
+						<button onclick="loadImage('texture2.png')">Texture 2</button>
+						<button onclick="loadImage('texture3.png')">Texture 3</button>
+						<button onclick="loadImage('texture4.png')">Texture 4</button>
+					</div>
+					<h2 class="content">From Perlin</h2>
+					<div id="perlin-parameters">
+						<label for="perlin-seed">Seed</label>
+						<input type="number" id="perlin-seed" value="0" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-scale">Scale</label>
+						<input type="range" id="perlin-scale" min="1" max="20" value="10" step="1" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-amplitude">Amplitude</label>
+						<input type="range" id="perlin-amplitude" min="0.01" max="2" value="1" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-persistence">Persistence</label>
+						<input type="range" id="perlin-persistence" min="0.01" max="100" value="0.5" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-lacunarity">Lacunarity</label>
+						<input type="range" id="perlin-lacunarity" min="0.01" max="100" value="2" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<button onclick="handleGeneratePerlin()">Generate</button>
+					</div>
+				</div>
+				<div id="hm-right-part" class="content">
+					<h2 class="content">Result</h2>
+					<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
+				</div>
+			</div>
+		</div>
+		<div class="container" id="right-container">
+			<div id="selector">
+				<h1 class="content">Object Selection</h1>
+				<select  id="object-selector" multiple onchange="changeObject()">
+
+				</select>
+				<button class="content" onclick="deleteSelected()">Remove Object</button>
+				<h2 class="content">Add Object</h2>
+				<div id="objects-selector">
+					<button onclick="addMeshObj('bunny.obj')">Stanford's Bunny</button>
+					<button onclick="addMeshObj('mustang.obj')">Mustang</button>
+					<button onclick="addMeshObj('porsche.obj')">Porsche</button>
+					<button onclick="addMeshObj('sphere.obj')">Sphere</button>
+					<button onclick="addHeightmapObj()">Heightmap</button>
+				</div>
+			</div>
+		</div>
+		
+	</body>
+</html>

@@ -1,0 +1,79 @@
+body {
+  font-family: 'Roboto', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  margin: 0;
+  padding: 0;
+  background: white;
+  color: black;
+  display: inline-flex;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+th {
+  text-align: left;
+}
+
+td {
+  text-align: center;
+  justify-content: center;
+}
+
+.container {
+  flex: 1;
+  height: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: flexbox;
+}
+
+.hcontainer {
+  flex: 1;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+  display: inline-flex;
+}
+
+.content {
+  flex: 1;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+#left-container {
+  overflow-x: scroll;
+}
+
+#center-container {
+  flex: 3;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+#right-container {
+  overflow-x: scroll;
+}
+
+#selector {
+  width: 90%;
+  height: 30%;
+  display: flexbox;
+}
+
+#object-selector {
+  width: 100%;
+  height: 100%;
+  margin: 20px 0;
+}
+
+#heightmap-result {
+  transform: scale(0.9);
+}
