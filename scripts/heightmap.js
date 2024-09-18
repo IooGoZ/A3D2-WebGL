@@ -1,6 +1,6 @@
 // Author : Tom BOIREAU
 
-var heightmapFolder = "/heightmaps/";
+var heightmapFolder = "heightmaps/";
 
 var selectedHeightmap = null;
 
@@ -62,7 +62,9 @@ function loadImage(imgName, divider=1) {
 // =====================================================
 function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, width=512, height=512) {
     var heightmap = new Array(width);
-    var perlin = new PerlinNoise(scale, amplitude, persistence, lacunarity, seed);
+    var perlin = new PerlinNoise(scale, amplitude/3, persistence, lacunarity, seed);
+    var perlin2 = new PerlinNoise(scale*1.5, amplitude/3, persistence, lacunarity, seed+1);
+    var perlin3 = new PerlinNoise(scale*0.5, amplitude/3, persistence, lacunarity, seed+2);
 
     var ctx = resultElem.getContext("2d");
     resultElem.width = width;
@@ -75,10 +77,10 @@ function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, la
         for (var j=0; j<height; j++) {
             var x = i / width;
             var y = j / height;
-            var noise = perlin.noise(x, y);
+            var noise = perlin.noise(x, y) + perlin2.noise(x, y) + perlin3.noise(x, y);
 
-            if (noise < 0) noise *= -1;
-            
+            if (noise < 0) noise *= -0;
+
             heightmap[i][j] = noise;
 
             ctx.fillStyle = "rgb(" + Math.floor(255*noise) + "," + Math.floor(255*noise) + "," + Math.floor(255*noise) + ")";

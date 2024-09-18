@@ -1,7 +1,7 @@
 // Autor: Tom BOIREAU (sur la base d'un code fourni par Nicolas COURILLEAU)
 
-var shadersFolder = '/shaders/';
-var objFolder = '/objects/';
+var shadersFolder = 'shaders/';
+var objFolder = 'objects/';
 
 // =====================================================
 // FONCTIONS ASYNCHRONES (Merci Javascript de ne pas les permettre dans les classes)
