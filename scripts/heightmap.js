@@ -62,9 +62,7 @@ function loadImage(imgName, divider=1) {
 // =====================================================
 function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, width=512, height=512) {
     var heightmap = new Array(width);
-    var perlin = new PerlinNoise(scale, amplitude/3, persistence, lacunarity, seed);
-    var perlin2 = new PerlinNoise(scale*1.5, amplitude/3, persistence, lacunarity, seed+1);
-    var perlin3 = new PerlinNoise(scale*0.5, amplitude/3, persistence, lacunarity, seed+2);
+    var perlin = new SquareNoise(scale, amplitude, seed, width, height);
 
     var ctx = resultElem.getContext("2d");
     resultElem.width = width;
@@ -77,7 +75,7 @@ function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, la
         for (var j=0; j<height; j++) {
             var x = i / width;
             var y = j / height;
-            var noise = perlin.noise(x, y) + perlin2.noise(x, y) + perlin3.noise(x, y);
+            var noise = perlin.noise(x, y);
 
             if (noise < 0) noise *= -0;
 
@@ -104,91 +102,121 @@ function handleGeneratePerlin() {
 
 
 // =====================================================
-// BRUIT DE PERLIN
+// BRUIT 2D (Maison)
 // =====================================================
 
-class PerlinNoise {
-    constructor(scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, seed = 0) {
+class SquareNoise {
+    constructor(scale = 1, amplitude = 1, seed = 0, pass=3, width=512, height=512) {
         this.scale = scale;
         this.amplitude = amplitude;
-        this.persistence = persistence;
-        this.lacunarity = lacunarity;
         this.seed = seed;
+        this.pass = pass;
+        this.width = width;
+        this.height = height;
 
-        // Tableaux de permutations
-        this.permutation = [];
-        this.permutationTable = [];
+        this.indSeed = this.seed%13+1;
 
-        // Générer la table de permutation en fonction de la seed
-        this.generatePermutationTable();
-    }
+        this.min = Number.MAX_VALUE;
+        this.max = Number.MIN_VALUE;
 
-    // Générer une table de permutations avec une seed
-    generatePermutationTable() {
-        // Fonction pseudo-aléatoire basée sur la seed
-        const pseudoRandom = this.seededRandom(this.seed);
-
-        // Remplissage d'un tableau avec des valeurs 0-255
-        for (let i = 0; i < 256; i++) {
-            this.permutation[i] = i;
+        this.matrix = new Array(this.width);
+        for (var i=0; i<this.width; i++) {
+            this.matrix[i] = new Array(this.height);
+            for (var j=0; j<this.height; j++) {
+                this.matrix[i][j] = 0;
+            }
         }
 
-        // Mélanger les valeurs en fonction de la seed
-        for (let i = 255; i > 0; i--) {
-            const j = Math.floor(pseudoRandom() * (i + 1));
-            [this.permutation[i], this.permutation[j]] = [this.permutation[j], this.permutation[i]];
+        this.generate();
+    }
+
+    // =====================================================
+    seededRandom() {
+        var res = Math.sin(this.seed + this.indSeed++) * 10000;
+        res ^= res >> 13;
+        res = res%2 - 1;
+        return res;
+    }
+
+
+    // =====================================================
+    addMatrix(matrix) {  
+        for (var i=0; i<this.width; i++) {
+            for (var j=0; j<this.height; j++) {
+                this.matrix[i][j] += matrix[i][j];
+            }
+        }
+    }
+
+    applyConvolution(kernel) {
+        for (var i=0; i<this.width; i++) {
+            for (var j=0; j<this.height; j++) {
+                var sum = 0;
+                var div = 0;
+                for (var k=0; k<kernel.length; k++) {
+                    for (var l=0; l<kernel[k].length; l++) {
+                        var x = i + k - Math.floor(kernel.length/2);
+                        var y = j + l - Math.floor(kernel[k].length/2);
+                        div += kernel[k][l];
+                        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
+                            sum += kernel[k][l] * this.matrix[x][y];
+                        } else {
+                            sum += kernel[k][l] * this.matrix[i][j];
+                        }
+                    }
+                }
+                var v = sum / div;
+                this.matrix[i][j] = v;
+                if (v < this.min) this.min = v;
+                if (v > this.max) this.max = v;
+            }
+        }
+    }
+
+
+    // =====================================================
+    generate() {
+        var noise = new Array(this.width);
+        var deltaX = this.seededRandom() * 2 * Math.PI;
+        var deltaY = this.seededRandom() * 2 * Math.PI;
+
+        var repX = this.seededRandom();
+        var repY = this.seededRandom();
+
+        for (var i=0; i<this.width; i++) {
+            noise[i] = new Array(this.height);
+            for (var j=0; j<this.height; j++) {
+                noise[i][j] = this.seededRandom() * Math.sin(i/this.width * deltaX) * Math.sin(j/this.height * deltaY);
+                deltaX += repX;
+                deltaY += repY;
+            }
+        }
+        this.addMatrix(noise);
+
+        for (var i = 0 ; i < 10 ; i++) {
+            var canny = [
+                [0, 1, 0],
+                [1, 1, 1],
+                [0, 1, 0]
+            ];
+            this.applyConvolution(canny);
+
+            var gaussian = [
+                [1, 2, 1],
+                [2, 12, 2],
+                [1, 2, 1]
+            ];
+            this.applyConvolution(gaussian);
         }
 
-        // Dupliquer la table pour éviter les débordements
-        for (let i = 0; i < 512; i++) {
-            this.permutationTable[i] = this.permutation[i % 256];
-        }
+        
     }
+    
 
-    // Fonction pour créer un générateur pseudo-aléatoire basé sur une seed
-    seededRandom(seed) {
-        return function() {
-            // Implémentation simple du générateur de nombres pseudo-aléatoires (LCG)
-            seed = (seed * 9301 + 49297) % 233280;
-            return seed / 233280;
-        };
-    }
-
-    fade(t) {
-        return t * t * t * (t * (t * 6 - 15) + 10);
-    }
-
-    lerp(t, a, b) {
-        return a + t * (b - a);
-    }
-
-    grad(hash, x, y) {
-        const h = hash & 3;
-        const u = h < 2 ? x : y;
-        const v = h < 2 ? y : x;
-        return (h & 1 ? -u : u) + (h & 2 ? -v : v);
-    }
-
+    // =====================================================
     noise(x, y) {
-        x *= this.scale;
-        y *= this.scale;
 
-        const X = Math.floor(x) & 255;
-        const Y = Math.floor(y) & 255;
-
-        const xf = x - Math.floor(x);
-        const yf = y - Math.floor(y);
-
-        const u = this.fade(xf);
-        const v = this.fade(yf);
-
-        const aa = this.permutationTable[X + this.permutationTable[Y]];
-        const ab = this.permutationTable[X + this.permutationTable[Y + 1]];
-        const ba = this.permutationTable[X + 1 + this.permutationTable[Y]];
-        const bb = this.permutationTable[X + 1 + this.permutationTable[Y + 1]];
-
-        const x1 = this.lerp(u, this.grad(aa, xf, yf), this.grad(ba, xf - 1, yf));
-        const x2 = this.lerp(u, this.grad(ab, xf, yf - 1), this.grad(bb, xf - 1, yf - 1));
-        return this.lerp(v, x1, x2) * this.amplitude;
+        return this.matrix[Math.floor(x * this.width)][Math.floor(y * this.height)] * this.amplitude;
     }
+
 }

@@ -85,6 +85,56 @@ function compileShaders(Obj3D)
 }
 
 // =====================================================
+// Code from https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
+function load2DTextureBuffer(url) {
+	var texture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+
+	const level = 0;
+	const internalFormat = gl.RGBA;
+	const width = 1;
+	const height = 1;
+	const border = 0;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+	gl.texImage2D(
+		gl.TEXTURE_2D,
+		level,
+		internalFormat,
+		width,
+		height,
+		border,
+		srcFormat,
+		srcType,
+		pixel,
+	);
+
+	const image = new Image();
+	image.onload = () => {
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(
+		gl.TEXTURE_2D,
+		level,
+		internalFormat,
+		srcFormat,
+		srcType,
+		image,
+		);
+
+		gl.generateMipmap(gl.TEXTURE_2D);
+	};
+
+	
+
+	image.src = url;
+
+	return texture;
+}
+		
+
+
+// =====================================================
 // OBJET 3D, classe de base
 // =====================================================
 
@@ -107,7 +157,6 @@ class ThreeDObject {
 
 	// --------------------------------------------
 	setMatrixUniforms() {
-
 		mat4.identity(mvMatrix);
 		mat4.translate(mvMatrix, distCENTER);
 		mat4.multiply(mvMatrix, rotMatrix);
@@ -176,16 +225,23 @@ class objmesh extends ThreeDObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
 		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+		// this.shader.tAttrib = gl.getAttribLocation(this.shader, "aTexCoord");
+		// gl.enableVertexAttribArray(this.shader.tAttrib);
+		// gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
+		// gl.vertexAttribPointer(this.shader.tAttrib, this.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
 		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
 		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
 		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
 	}
 	
 	// --------------------------------------------
 	setMatrixUniforms() {
 		super.setMatrixUniforms();
 		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform1i(this.shader.uUseTexture, 0);
 	}
 	
 	// --------------------------------------------
@@ -305,6 +361,7 @@ class map3D extends ThreeDObject {
         this.ampl = 0.5;
 
         this.initAll();
+
         loadShaders(this);
     }
 
@@ -407,6 +464,8 @@ class map3D extends ThreeDObject {
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.mesh.indices), gl.STATIC_DRAW);
 		this.mesh.indexBuffer.itemSize = 1;
 		this.mesh.indexBuffer.numItems = this.mesh.indices.length;
+
+		this.mesh.texture = load2DTextureBuffer('textures/height_color.png');
     }
 
     // Définir les paramètres des shaders
@@ -426,13 +485,18 @@ class map3D extends ThreeDObject {
 		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
 		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
-		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.texture);
+		gl.uniform1i(this.shader.uSampler, 0);
 	}
 
     // Définir les matrices des shaders
     setMatrixUniforms() {
 		super.setMatrixUniforms();
-		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform1i(this.shader.uUseTexture, 1);
 	}
 
     // Changer la couleur de l'objet
