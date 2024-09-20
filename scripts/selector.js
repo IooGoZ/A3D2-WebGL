@@ -172,3 +172,10 @@ function changeColor() {
 
 	selectedObject.setColor(COLOR);
 }
+
+// =====================================================
+function addColorHeightmap() {
+
+    print (" ");
+	
+}

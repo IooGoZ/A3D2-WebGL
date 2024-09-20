@@ -1,10 +1,11 @@
 // Author : Tom BOIREAU
 
-var heightmapFolder = "/heightmaps/";
+var heightmapFolder = "heightmaps/";
 
 var selectedHeightmap = null;
 
 var resultElem = null;
+
 
 // =====================================================
 // FONCTIONS GENERALES, INITIALISATIONS
@@ -83,6 +84,7 @@ function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, la
 
             ctx.fillStyle = "rgb(" + Math.floor(255*noise) + "," + Math.floor(255*noise) + "," + Math.floor(255*noise) + ")";
             ctx.fillRect(i, j, 1, 1);
+
         }
     }
 
