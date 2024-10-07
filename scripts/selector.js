@@ -17,6 +17,7 @@ var rotXElem = null;
 var rotYElem = null;
 var rotZElem = null;
 var colorElem = null;
+var wireframeElem = null; 
 
 // =====================================================
 // FONCTIONS GENERALES, INITIALISATIONS
@@ -35,6 +36,7 @@ function initSelector() {
     rotYElem = document.getElementById("rotY");
     rotZElem = document.getElementById("rotZ");
     colorElem = document.getElementById("color");
+    wireframeElem = document.getElementById("wireframe");
 
     // Charger le système de heightmap
     initHeightmap();
@@ -87,6 +89,14 @@ function select(obj) {
     } else {
         colorElem.value = "#FFFFFF";
         colorElem.disabled = true;
+    }
+
+    try {
+        wireframeElem.checked = obj.getWireState();
+        wireframeElem.disabled = false;
+    } catch (e) {
+        wireframeElem.checked = false;
+        wireframeElem.disabled = true;
     }
 }
 
@@ -174,8 +184,11 @@ function changeColor() {
 }
 
 // =====================================================
-function addColorHeightmap() {
-
-    print (" ");
-	
+function changeWireframe() {
+    try {
+        selectedObject.switchWireState();
+        wireframeElem.checked = selectedObject.getWireState();
+    } catch (e) {
+        wireframeElem.checked = false;
+    }
 }

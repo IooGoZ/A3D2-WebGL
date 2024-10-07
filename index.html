@@ -1,7 +1,7 @@
+<!DOCTYPE html>
 <html>
-
 	<head>
-		<title>WebGL - Canvas test</title>
+		<title>A3D II - Léna PROUST & Tom BOIREAU</title>
 		<meta http-equiv="content-type" content="text/html; charset=ISO-8859-1">
 
 		<link rel="stylesheet" type="text/css" href="styles/gstyle.css">
@@ -23,6 +23,11 @@
 				document.getElementById("rotY").value = 0;
 				document.getElementById("rotZ").value = 0;
 				document.getElementById("color").value = "#ffffff";
+				document.getElementById("perlin-scale").value = 0.01;
+				document.getElementById("perlin-amplitude").value = 2;
+				document.getElementById("perlin-persistence").value = 0.45;
+				document.getElementById("perlin-octaves").value = 8;
+				document.getElementById("perlin-contrast").value = 1;
 				webGLStart();
 			}	
 		</script>
@@ -92,15 +97,25 @@
 							</th>
 						</tr>
 					</thead>
+					<thead>
+						<tr>
+							<th>Wireframe :</th>
+							<th>
+								<input type="checkbox" id="wireframe" checked="false" onchange="changeWireframe()">
+							</th>
+						</tr>
+					</thead>
 				</table>
 				<div id="color-heightmap">
 					<button onclick="addColorHeightmap()">Add color</button>
 				</div>
 			</div>
 		</div>
-		<div class="container" id="center-container">
-			<canvas class="content" id="WebGL-test" style="border:none;" width="3840" height="2160" oncontextmenu="return false;"></canvas>
-			<div class="content hcontainer">
+		<div class="container" id="center-container" style="max-width:60vw;">
+			<div class="content" style="max-height: 50vh;">
+				<canvas id="WebGL-test" style="border:none;" width="3840" height="2160" oncontextmenu="return false;"></canvas>
+			</div>
+			<div class="hcontainer">
 				<div id="hm-left-part" class="content">
 					<h1>Heightmap</h1>
 					<h2 class="content">From Texture</h2>
@@ -112,16 +127,17 @@
 					</div>
 					<h2 class="content">From Perlin</h2>
 					<div id="perlin-parameters">
-						<label for="perlin-seed">Seed</label>
-						<input type="number" id="perlin-seed" value="0" onchange="handleGeneratePerlin()"><br/>
+						<button onclick="resetGradients()">Reset Gradients</button><br/>
 						<label for="perlin-scale">Scale</label>
-						<input type="range" id="perlin-scale" min="1" max="20" value="10" step="1" onchange="handleGeneratePerlin()"><br/>
+						<input type="range" id="perlin-scale" min="0.001" max="0.05" value="0.01" step="0.0005" onchange="handleGeneratePerlin()"><br/>
 						<label for="perlin-amplitude">Amplitude</label>
-						<input type="range" id="perlin-amplitude" min="0.01" max="2" value="1" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<input type="range" id="perlin-amplitude" min="0" max="5" value="2" step="0.01" onchange="handleGeneratePerlin()"><br/>
 						<label for="perlin-persistence">Persistence</label>
-						<input type="range" id="perlin-persistence" min="0.01" max="100" value="0.5" step="0.01" onchange="handleGeneratePerlin()"><br/>
-						<label for="perlin-lacunarity">Lacunarity</label>
-						<input type="range" id="perlin-lacunarity" min="0.01" max="100" value="2" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<input type="range" id="perlin-persistence" min="0" max="1" value="0.5" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-octaves">Octaves</label>
+						<input type="range" id="perlin-octaves" min="0" max="10" value="8" step="0.01" onchange="handleGeneratePerlin()"><br/>
+						<label for="perlin-contrast">Contrast</label>
+						<input type="range" id="perlin-contrast" min="0" max="2" value="1" step="0.01" onchange="handleGeneratePerlin()"><br/>
 						<button onclick="handleGeneratePerlin()">Generate</button>
 					</div>
 				</div>

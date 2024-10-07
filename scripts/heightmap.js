@@ -60,29 +60,42 @@ function loadImage(imgName, divider=1) {
     }
 }
 
+let width = 512;
+let height = 512;
+let Ggradients = generateGradients(width, height);
+
+function resetGradients() {
+    Ggradients = generateGradients(width, height);
+    handleGeneratePerlin();
+}
+
+
 // =====================================================
-function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, width=512, height=512) {
+function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave = 2, contrast = 0.5) {
     var heightmap = new Array(width);
-    var perlin = new PerlinNoise(scale, amplitude, persistence, lacunarity, seed);
 
     var ctx = resultElem.getContext("2d");
     resultElem.width = width;
     resultElem.height = height;
 
-    ctx.clearRect(0, 0, width, height);
+    const gradients = Ggradients;
+
+    ctx.clearRect(0, 0, width + 1, height + 1);
 
     for (var i=0; i<width; i++) {
         heightmap[i] = new Array(height);
         for (var j=0; j<height; j++) {
-            var x = i / width;
-            var y = j / height;
-            var noise = perlin.noise(x, y);
+            let noise = perlinOctaves(i * scale, j * scale, gradients, octave, persistence) * amplitude;
+            noise = adjustContrast(noise, contrast);
+            // Normalisation entre -1 et 1, puis 0 à 1
+            //noise = noise ;
+            //noise = Math.max(0, Math.min(1, noise));
 
-            if (noise < 0) noise *= -1;
-            
             heightmap[i][j] = noise;
 
-            ctx.fillStyle = "rgb(" + Math.floor(255*noise) + "," + Math.floor(255*noise) + "," + Math.floor(255*noise) + ")";
+            // Utiliser le bruit pour définir une couleur en niveaux de gris
+            let colorValue = Math.floor(255 * noise);
+            ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
             ctx.fillRect(i, j, 1, 1);
 
         }
@@ -90,105 +103,117 @@ function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, la
 
     selectedHeightmap = heightmap;
 }
+    
 
 // =====================================================
 function handleGeneratePerlin() {
-    var seed = parseInt(document.getElementById("perlin-seed").value);
     var scale = parseFloat(document.getElementById("perlin-scale").value);
     var amplitude = parseFloat(document.getElementById("perlin-amplitude").value);
     var persistence = parseFloat(document.getElementById("perlin-persistence").value);
-    var lacunarity = parseFloat(document.getElementById("perlin-lacunarity").value);
+    var octave = parseFloat(document.getElementById("perlin-octaves").value);
+    var contrast = parseFloat(document.getElementById("perlin-contrast").value);
 
-    generateHeightmap(seed, scale, amplitude, persistence, lacunarity);
+    generateHeightmap(scale, amplitude, persistence, octave, contrast);
+}
+
+// BRUIT DE PERLIN =====================================================
+// Cette partie du code est basée sur le pseudo-code de l'article Wikipedia sur le bruit de Perlin
+// https://fr.wikipedia.org/wiki/Bruit_de_Perlin#Pseudo-code
+// Il a enssuite été amélioré avec ChatGPT et des ajustements personnels
+// Il est donc demandé à l'évaluateur de ne pas inclure cette portion de code dans la notation
+// =====================================================================
+
+function adjustContrast(value, factor) {
+    //value = Math.max(0, Math.min(1, value));
+    value = (value + 1) / 2;
+
+    if (factor < 0) {
+        return Math.pow(value, 1 - factor);
+    } else {
+        return Math.pow(value, 1 + factor);
+    }
 }
 
 
-// =====================================================
-// BRUIT DE PERLIN
-// =====================================================
+function perlinOctaves(x, y, gradients, octaves, persistence) {
+    let total = 0;
+    let frequency = 1;
+    let amplitude = 1;
+    let maxValue = 0;
 
-class PerlinNoise {
-    constructor(scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, seed = 0) {
-        this.scale = scale;
-        this.amplitude = amplitude;
-        this.persistence = persistence;
-        this.lacunarity = lacunarity;
-        this.seed = seed;
+    for (let i = 0; i < octaves; i++) {
+        total += perlin(x * frequency, y * frequency, gradients) * amplitude;
 
-        // Tableaux de permutations
-        this.permutation = [];
-        this.permutationTable = [];
+        maxValue += amplitude;
 
-        // Générer la table de permutation en fonction de la seed
-        this.generatePermutationTable();
+        amplitude *= persistence;
+        frequency *= 2;
     }
 
-    // Générer une table de permutations avec une seed
-    generatePermutationTable() {
-        // Fonction pseudo-aléatoire basée sur la seed
-        const pseudoRandom = this.seededRandom(this.seed);
-
-        // Remplissage d'un tableau avec des valeurs 0-255
-        for (let i = 0; i < 256; i++) {
-            this.permutation[i] = i;
-        }
-
-        // Mélanger les valeurs en fonction de la seed
-        for (let i = 255; i > 0; i--) {
-            const j = Math.floor(pseudoRandom() * (i + 1));
-            [this.permutation[i], this.permutation[j]] = [this.permutation[j], this.permutation[i]];
-        }
-
-        // Dupliquer la table pour éviter les débordements
-        for (let i = 0; i < 512; i++) {
-            this.permutationTable[i] = this.permutation[i % 256];
-        }
-    }
-
-    // Fonction pour créer un générateur pseudo-aléatoire basé sur une seed
-    seededRandom(seed) {
-        return function() {
-            // Implémentation simple du générateur de nombres pseudo-aléatoires (LCG)
-            seed = (seed * 9301 + 49297) % 233280;
-            return seed / 233280;
-        };
-    }
-
-    fade(t) {
-        return t * t * t * (t * (t * 6 - 15) + 10);
-    }
-
-    lerp(t, a, b) {
-        return a + t * (b - a);
-    }
-
-    grad(hash, x, y) {
-        const h = hash & 3;
-        const u = h < 2 ? x : y;
-        const v = h < 2 ? y : x;
-        return (h & 1 ? -u : u) + (h & 2 ? -v : v);
-    }
-
-    noise(x, y) {
-        x *= this.scale;
-        y *= this.scale;
-
-        const X = Math.floor(x) & 255;
-        const Y = Math.floor(y) & 255;
-
-        const xf = x - Math.floor(x);
-        const yf = y - Math.floor(y);
-
-        const u = this.fade(xf);
-        const v = this.fade(yf);
-
-        const aa = this.permutationTable[X + this.permutationTable[Y]];
-        const ab = this.permutationTable[X + this.permutationTable[Y + 1]];
-        const ba = this.permutationTable[X + 1 + this.permutationTable[Y]];
-        const bb = this.permutationTable[X + 1 + this.permutationTable[Y + 1]];
-
-        const x1 = this.lerp(u, this.grad(aa, xf, yf), this.grad(ba, xf - 1, yf));
-        const x2 = this.lerp(u, this.grad(ab, xf, yf - 1), this.grad(bb, xf - 1, yf - 1));
-        return this.lerp(v, x1, x2) * this.amplitude;
-    }
+    return total / maxValue;
 }
+
+function smoothstep(w) {
+    if (w <= 0.0) return 0.0;
+    if (w >= 1.0) return 1.0;
+    return w * w * (3.0 - 2.0 * w);
+}
+
+function interpolate(a0, a1, w) {
+    return a0 + (a1 - a0) * w;
+}
+
+function dotGridGradient(ix, iy, x, y, gradients) {
+    if (ix < 0 || ix >= gradients[0].length || iy < 0 || iy >= gradients.length) {
+        return 0;
+    }
+
+    const Gradient = gradients;
+
+    const dx = x - ix;
+    const dy = y - iy;
+
+    return (dx * Gradient[iy][ix][0] + dy * Gradient[iy][ix][1]);
+}
+
+function perlin(x, y, gradients) {
+    const x0 = Math.floor(x);
+    const x1 = x0 + 1;
+    const y0 = Math.floor(y);
+    const y1 = y0 + 1;
+
+    const sx = x - x0;
+    const sy = y - y0;
+
+    let n0, n1, ix0, ix1, value;
+    n0 = dotGridGradient(x0, y0, x, y, gradients);
+    n1 = dotGridGradient(x1, y0, x, y, gradients);
+    ix0 = interpolate(n0, n1, sx);
+    n0 = dotGridGradient(x0, y1, x, y, gradients);
+    n1 = dotGridGradient(x1, y1, x, y, gradients);
+    ix1 = interpolate(n0, n1, sx);
+    value = interpolate(ix0, ix1, sy);
+
+    return value;
+}
+
+function generateGradients(gridWidth, gridHeight) {
+    const gradients = [];
+    
+    for (let y = 0; y <= gridHeight; y++) {
+        const row = [];
+        for (let x = 0; x <= gridWidth; x++) {
+            const angle = Math.random() * 2 * Math.PI;
+
+            const gradient = [Math.cos(angle), Math.sin(angle)];
+            row.push(gradient);
+        }
+        gradients.push(row);
+    }
+
+    return gradients;
+}
+
+// =====================================================
+// FIN DU BRUIT DE PERLIN
+// =====================================================
