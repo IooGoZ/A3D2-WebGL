@@ -6,6 +6,7 @@ var selectedHeightmap = null;
 
 var resultElem = null;
 
+
 // =====================================================
 // FONCTIONS GENERALES, INITIALISATIONS
 // =====================================================
@@ -96,6 +97,7 @@ function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave =
             let colorValue = Math.floor(255 * noise);
             ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
             ctx.fillRect(i, j, 1, 1);
+
         }
     }
 

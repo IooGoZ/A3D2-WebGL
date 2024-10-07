@@ -24,6 +24,6 @@ void main(void) {
 	} else {
 		vColor = uColor;
 	}
-	
+  
 	gl_Position = uPMatrix * pos3D;
 }
