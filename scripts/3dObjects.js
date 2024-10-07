@@ -27,16 +27,17 @@ function loadObjFile(Obj3D) {
 }
 
 // =====================================================
-function loadShaders(Obj3D) {
-	loadShaderText(Obj3D,'.vs');
-	loadShaderText(Obj3D,'.fs');
+function loadShaders(Obj3D, shaderName = null) {
+	loadShaderText(Obj3D,'.vs', shaderName);
+	loadShaderText(Obj3D,'.fs', shaderName);
 }
 
 // =====================================================
-function loadShaderText(Obj3D,ext) {   // lecture asynchrone...
+function loadShaderText(Obj3D,ext, shaderName) {   // lecture asynchrone...
   var xhttp = new XMLHttpRequest();
   
-  const url = shadersFolder + Obj3D.shaderName + ext;
+  if(shaderName==null) shaderName = Obj3D.shaderName;
+  const url = shadersFolder + shaderName + ext;
 
   xhttp.onreadystatechange = function() {
 	if (xhttp.readyState == 4 && xhttp.status == 200) {
@@ -191,11 +192,59 @@ class ThreeDObject {
 	}
 }
 
+// =====================================================
+// Abstract : Wireframe 3D Object
+// =====================================================
+class WireframeObject extends ThreeDObject {
+	constructor(position = vec3.create([0,0,0]), rotation = vec3.create([0,0,0]), shaderName = 'obj', wireShaderName = 'wire') {
+		super(position, rotation, shaderName);
+		this.wireShaderName = wireShaderName;
+		this.wireActive = false;
+	}
+
+	switchWireState() {
+		this.wireActive = !this.wireActive;
+		if (this.wireActive) {
+			loadShaders(this, this.wireShaderName);
+		} else {
+			loadShaders(this);
+		}
+	}
+
+	getWireState() {
+		return this.wireActive;
+	}
+
+	setShadersParams() {
+		gl.useProgram(this.shader);
+
+		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
+		gl.enableVertexAttribArray(this.shader.vAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
+		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
+		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
+	}
+
+	draw() {
+		if (this.wireActive) {
+			this.setShadersParams();
+			this.setMatrixUniforms();
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.indexBuffer);
+			gl.drawElements(gl.LINES, this.mesh.indexBuffer.numItems, gl.UNSIGNED_INT, 0);
+		} else {
+			super.draw();
+		}
+	}
+}
+
 
 // =====================================================
 // OBJET 3D, lecture fichier obj
 // =====================================================
-class objmesh extends ThreeDObject {
+class objmesh extends WireframeObject {
 
 	// --------------------------------------------
 	constructor(objFname, position = vec3.create([0,0,0]), rotation = vec3.create([0,0,0]), color = vec3.create([1,1,1])) {
@@ -213,6 +262,11 @@ class objmesh extends ThreeDObject {
 	}
 
 	setShadersParams() {
+		if (this.wireActive) {
+			super.setShadersParams();
+			return;
+		}
+
 		gl.useProgram(this.shader);
 
 		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
@@ -240,6 +294,9 @@ class objmesh extends ThreeDObject {
 	// --------------------------------------------
 	setMatrixUniforms() {
 		super.setMatrixUniforms();
+		if (this.wireActive) {
+			return;
+		}
 		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
 		gl.uniform1i(this.shader.uUseTexture, 0);
 	}
@@ -336,7 +393,7 @@ class plane extends ThreeDObject{
 // =====================================================
 // MAP 3D, construit a partir d'une heightmap
 // =====================================================
-class map3D extends ThreeDObject {
+class map3D extends WireframeObject {
     constructor(map, position = vec3.create([0, 0, 0]), rotation = vec3.create([0, 0, 0]), color = vec3.create([1, 1, 1]), ampl=1.5, x=-1, y=-1, z=0, dx=2.0, dy=2.0) {
         super(position, rotation);
         
@@ -470,6 +527,11 @@ class map3D extends ThreeDObject {
 
     // Définir les paramètres des shaders
 	setShadersParams() {
+		if (this.wireActive) {
+			super.setShadersParams();
+			return;
+		}
+
 		gl.useProgram(this.shader);
 
 		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
@@ -496,6 +558,9 @@ class map3D extends ThreeDObject {
     // Définir les matrices des shaders
     setMatrixUniforms() {
 		super.setMatrixUniforms();
+		if (this.wireActive) {
+			return;
+		}
 		gl.uniform1i(this.shader.uUseTexture, 1);
 	}
 

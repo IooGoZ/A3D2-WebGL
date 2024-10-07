@@ -59,164 +59,159 @@ function loadImage(imgName, divider=1) {
     }
 }
 
+let width = 512;
+let height = 512;
+let Ggradients = generateGradients(width, height);
+
+function resetGradients() {
+    Ggradients = generateGradients(width, height);
+    handleGeneratePerlin();
+}
+
+
 // =====================================================
-function generateHeightmap(seed, scale = 1, amplitude = 1, persistence = 0.5, lacunarity = 2, width=512, height=512) {
+function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave = 2, contrast = 0.5) {
     var heightmap = new Array(width);
-    var perlin = new SquareNoise(scale, amplitude, seed, width, height);
 
     var ctx = resultElem.getContext("2d");
     resultElem.width = width;
     resultElem.height = height;
 
-    ctx.clearRect(0, 0, width, height);
+    const gradients = Ggradients;
+
+    ctx.clearRect(0, 0, width + 1, height + 1);
 
     for (var i=0; i<width; i++) {
         heightmap[i] = new Array(height);
         for (var j=0; j<height; j++) {
-            var x = i / width;
-            var y = j / height;
-            var noise = perlin.noise(x, y);
-
-            if (noise < 0) noise *= -0;
+            let noise = perlinOctaves(i * scale, j * scale, gradients, octave, persistence) * amplitude;
+            noise = adjustContrast(noise, contrast);
+            // Normalisation entre -1 et 1, puis 0 à 1
+            //noise = noise ;
+            //noise = Math.max(0, Math.min(1, noise));
 
             heightmap[i][j] = noise;
 
-            ctx.fillStyle = "rgb(" + Math.floor(255*noise) + "," + Math.floor(255*noise) + "," + Math.floor(255*noise) + ")";
+            // Utiliser le bruit pour définir une couleur en niveaux de gris
+            let colorValue = Math.floor(255 * noise);
+            ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
             ctx.fillRect(i, j, 1, 1);
         }
     }
 
     selectedHeightmap = heightmap;
 }
+    
 
 // =====================================================
 function handleGeneratePerlin() {
-    var seed = parseInt(document.getElementById("perlin-seed").value);
     var scale = parseFloat(document.getElementById("perlin-scale").value);
     var amplitude = parseFloat(document.getElementById("perlin-amplitude").value);
     var persistence = parseFloat(document.getElementById("perlin-persistence").value);
-    var lacunarity = parseFloat(document.getElementById("perlin-lacunarity").value);
+    var octave = parseFloat(document.getElementById("perlin-octaves").value);
+    var contrast = parseFloat(document.getElementById("perlin-contrast").value);
 
-    generateHeightmap(seed, scale, amplitude, persistence, lacunarity);
+    generateHeightmap(scale, amplitude, persistence, octave, contrast);
+}
+
+// BRUIT DE PERLIN =====================================================
+// Cette partie du code est basée sur le pseudo-code de l'article Wikipedia sur le bruit de Perlin
+// https://fr.wikipedia.org/wiki/Bruit_de_Perlin#Pseudo-code
+// Il a enssuite été amélioré avec ChatGPT et des ajustements personnels
+// Il est donc demandé à l'évaluateur de ne pas inclure cette portion de code dans la notation
+// =====================================================================
+
+function adjustContrast(value, factor) {
+    //value = Math.max(0, Math.min(1, value));
+    value = (value + 1) / 2;
+
+    if (factor < 0) {
+        return Math.pow(value, 1 - factor);
+    } else {
+        return Math.pow(value, 1 + factor);
+    }
 }
 
 
-// =====================================================
-// BRUIT 2D (Maison)
-// =====================================================
+function perlinOctaves(x, y, gradients, octaves, persistence) {
+    let total = 0;
+    let frequency = 1;
+    let amplitude = 1;
+    let maxValue = 0;
 
-class SquareNoise {
-    constructor(scale = 1, amplitude = 1, seed = 0, pass=3, width=512, height=512) {
-        this.scale = scale;
-        this.amplitude = amplitude;
-        this.seed = seed;
-        this.pass = pass;
-        this.width = width;
-        this.height = height;
+    for (let i = 0; i < octaves; i++) {
+        total += perlin(x * frequency, y * frequency, gradients) * amplitude;
 
-        this.indSeed = this.seed%13+1;
+        maxValue += amplitude;
 
-        this.min = Number.MAX_VALUE;
-        this.max = Number.MIN_VALUE;
-
-        this.matrix = new Array(this.width);
-        for (var i=0; i<this.width; i++) {
-            this.matrix[i] = new Array(this.height);
-            for (var j=0; j<this.height; j++) {
-                this.matrix[i][j] = 0;
-            }
-        }
-
-        this.generate();
+        amplitude *= persistence;
+        frequency *= 2;
     }
 
-    // =====================================================
-    seededRandom() {
-        var res = Math.sin(this.seed + this.indSeed++) * 10000;
-        res ^= res >> 13;
-        res = res%2 - 1;
-        return res;
+    return total / maxValue;
+}
+
+function smoothstep(w) {
+    if (w <= 0.0) return 0.0;
+    if (w >= 1.0) return 1.0;
+    return w * w * (3.0 - 2.0 * w);
+}
+
+function interpolate(a0, a1, w) {
+    return a0 + (a1 - a0) * w;
+}
+
+function dotGridGradient(ix, iy, x, y, gradients) {
+    if (ix < 0 || ix >= gradients[0].length || iy < 0 || iy >= gradients.length) {
+        return 0;
     }
 
+    const Gradient = gradients;
 
-    // =====================================================
-    addMatrix(matrix) {  
-        for (var i=0; i<this.width; i++) {
-            for (var j=0; j<this.height; j++) {
-                this.matrix[i][j] += matrix[i][j];
-            }
-        }
-    }
+    const dx = x - ix;
+    const dy = y - iy;
 
-    applyConvolution(kernel) {
-        for (var i=0; i<this.width; i++) {
-            for (var j=0; j<this.height; j++) {
-                var sum = 0;
-                var div = 0;
-                for (var k=0; k<kernel.length; k++) {
-                    for (var l=0; l<kernel[k].length; l++) {
-                        var x = i + k - Math.floor(kernel.length/2);
-                        var y = j + l - Math.floor(kernel[k].length/2);
-                        div += kernel[k][l];
-                        if (x >= 0 && x < this.width && y >= 0 && y < this.height) {
-                            sum += kernel[k][l] * this.matrix[x][y];
-                        } else {
-                            sum += kernel[k][l] * this.matrix[i][j];
-                        }
-                    }
-                }
-                var v = sum / div;
-                this.matrix[i][j] = v;
-                if (v < this.min) this.min = v;
-                if (v > this.max) this.max = v;
-            }
-        }
-    }
+    return (dx * Gradient[iy][ix][0] + dy * Gradient[iy][ix][1]);
+}
 
+function perlin(x, y, gradients) {
+    const x0 = Math.floor(x);
+    const x1 = x0 + 1;
+    const y0 = Math.floor(y);
+    const y1 = y0 + 1;
 
-    // =====================================================
-    generate() {
-        var noise = new Array(this.width);
-        var deltaX = this.seededRandom() * 2 * Math.PI;
-        var deltaY = this.seededRandom() * 2 * Math.PI;
+    const sx = x - x0;
+    const sy = y - y0;
 
-        var repX = this.seededRandom();
-        var repY = this.seededRandom();
+    let n0, n1, ix0, ix1, value;
+    n0 = dotGridGradient(x0, y0, x, y, gradients);
+    n1 = dotGridGradient(x1, y0, x, y, gradients);
+    ix0 = interpolate(n0, n1, sx);
+    n0 = dotGridGradient(x0, y1, x, y, gradients);
+    n1 = dotGridGradient(x1, y1, x, y, gradients);
+    ix1 = interpolate(n0, n1, sx);
+    value = interpolate(ix0, ix1, sy);
 
-        for (var i=0; i<this.width; i++) {
-            noise[i] = new Array(this.height);
-            for (var j=0; j<this.height; j++) {
-                noise[i][j] = this.seededRandom() * Math.sin(i/this.width * deltaX) * Math.sin(j/this.height * deltaY);
-                deltaX += repX;
-                deltaY += repY;
-            }
-        }
-        this.addMatrix(noise);
+    return value;
+}
 
-        for (var i = 0 ; i < 10 ; i++) {
-            var canny = [
-                [0, 1, 0],
-                [1, 1, 1],
-                [0, 1, 0]
-            ];
-            this.applyConvolution(canny);
-
-            var gaussian = [
-                [1, 2, 1],
-                [2, 12, 2],
-                [1, 2, 1]
-            ];
-            this.applyConvolution(gaussian);
-        }
-
-        
-    }
+function generateGradients(gridWidth, gridHeight) {
+    const gradients = [];
     
+    for (let y = 0; y <= gridHeight; y++) {
+        const row = [];
+        for (let x = 0; x <= gridWidth; x++) {
+            const angle = Math.random() * 2 * Math.PI;
 
-    // =====================================================
-    noise(x, y) {
-
-        return this.matrix[Math.floor(x * this.width)][Math.floor(y * this.height)] * this.amplitude;
+            const gradient = [Math.cos(angle), Math.sin(angle)];
+            row.push(gradient);
+        }
+        gradients.push(row);
     }
 
+    return gradients;
 }
+
+// =====================================================
+// FIN DU BRUIT DE PERLIN
+// =====================================================
