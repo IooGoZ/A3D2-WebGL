@@ -1,29 +1,29 @@
 attribute vec3 aVertexPosition;
 attribute vec3 aVertexNormal;
+attribute vec2 aTextureCoord;
 
-uniform mat4 uRMatrix;
-uniform mat4 uMVMatrix;
-uniform mat4 uPMatrix;
+uniform mat4 uMVMatrix;//
+uniform mat4 uPMatrix;//
 
-uniform vec3 uColor;
-uniform sampler2D uSampler;
-uniform bool uUseTexture;
+uniform vec3 uColor;//
+uniform sampler2D uSampler;//
+uniform bool uUseTexture;//
 
 varying vec3 vColor;
-varying vec4 pos3D;
-varying vec3 N;
+varying vec4 vPos3D;
+varying vec3 vNormal;
+varying vec2 vTexCoords;
 
 void main(void) {
-	pos3D = uMVMatrix * vec4(aVertexPosition,1.0);
-	N = vec3(uRMatrix * vec4(aVertexNormal,1.0));
+	vPos3D = uMVMatrix * vec4(aVertexPosition,1.0);
+	vNormal = aVertexNormal;
+	vTexCoords = aTextureCoord;
 
 	if (uUseTexture) {
-		float heightFactor = (1.0 - aVertexPosition.z * 2.0) ;
-		vec2 texCoord = vec2(heightFactor, heightFactor);
-		vColor = texture2D(uSampler, texCoord).rgb;
+		vColor = texture2D(uSampler, aTextureCoord).rgb;
 	} else {
 		vColor = uColor;
 	}
   
-	gl_Position = uPMatrix * pos3D;
+	gl_Position = uPMatrix * vPos3D;
 }
