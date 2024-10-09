@@ -44,6 +44,9 @@ function initSelector() {
     // Ajout des objets de la scène
     addObj("Plane", new plane());
     obj = addMeshObj('porsche.obj');
+
+    handleGeneratePerlin();
+    addHeightmapObj();
 }
 
 // =====================================================

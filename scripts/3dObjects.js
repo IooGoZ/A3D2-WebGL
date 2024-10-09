@@ -19,6 +19,7 @@ function loadObjFile(Obj3D) {
 			var tmpMesh = new OBJ.Mesh(xhttp.responseText);
 			OBJ.initMeshBuffers(gl,tmpMesh);
 			Obj3D.mesh=tmpMesh;
+			try { Obj3D.endLoad();} catch(e) {}
 		}
 	}
 
@@ -196,7 +197,7 @@ class ThreeDObject {
 // Abstract : Wireframe 3D Object
 // =====================================================
 class WireframeObject extends ThreeDObject {
-	constructor(position = vec3.create([0,0,0]), rotation = vec3.create([0,0,0]), shaderName = 'obj', wireShaderName = 'wire') {
+	constructor(position = [0,0,0], rotation = [0,0,0], shaderName = 'obj', wireShaderName = 'wire') {
 		super(position, rotation, shaderName);
 		this.wireShaderName = wireShaderName;
 		this.wireActive = false;
@@ -240,73 +241,6 @@ class WireframeObject extends ThreeDObject {
 	}
 }
 
-
-// =====================================================
-// OBJET 3D, lecture fichier obj
-// =====================================================
-class objmesh extends WireframeObject {
-
-	// --------------------------------------------
-	constructor(objFname, position = vec3.create([0,0,0]), rotation = vec3.create([0,0,0]), color = vec3.create([1,1,1])) {
-		super(position, rotation);
-
-		this.objFname = objFname;
-		this.color = color;
-
-		this.initAll();
-		loadShaders(this);
-	}
-
-	initAll() {
-		loadObjFile(this);
-	}
-
-	setShadersParams() {
-		if (this.wireActive) {
-			super.setShadersParams();
-			return;
-		}
-
-		gl.useProgram(this.shader);
-
-		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
-		gl.enableVertexAttribArray(this.shader.vAttrib);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
-		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-		this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
-		gl.enableVertexAttribArray(this.shader.nAttrib);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
-		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-		// this.shader.tAttrib = gl.getAttribLocation(this.shader, "aTexCoord");
-		// gl.enableVertexAttribArray(this.shader.tAttrib);
-		// gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
-		// gl.vertexAttribPointer(this.shader.tAttrib, this.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
-
-		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
-		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
-		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
-		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
-		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
-	}
-	
-	// --------------------------------------------
-	setMatrixUniforms() {
-		super.setMatrixUniforms();
-		if (this.wireActive) {
-			return;
-		}
-		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
-		gl.uniform1i(this.shader.uUseTexture, 0);
-	}
-	
-	// --------------------------------------------
-	setColor(col) {
-		this.color = col;
-	}
-}
-
 // =====================================================
 // PLAN 3D
 // =====================================================
@@ -314,7 +248,7 @@ class objmesh extends WireframeObject {
 class plane extends ThreeDObject{
 	
 	// --------------------------------------------
-	constructor(x=-1, y=-1, z=0, dx=2.0, dy=2.0, position = vec3.create([0,0,0]), rotation = vec3.create([0,0,0])) {
+	constructor(x=-1, y=-1, z=0, dx=2.0, dy=2.0, position = [0,0,0], rotation = [0,0,0]) {
 		super(position, rotation, 'plane');
 		this.x = x;
 		this.y = y;
@@ -390,12 +324,104 @@ class plane extends ThreeDObject{
 
 }
 
+
+// =====================================================
+// OBJET 3D, lecture fichier obj
+// =====================================================
+class objmesh extends WireframeObject {
+
+	// --------------------------------------------
+	constructor(objFname, position = [0,0,0], rotation = [0,0,0], color = [1,1,1], lightPos = [0.0,0.0,0.0], ambientLight = [0.2,0.2,0.2,1.0], lightColor = [1.0,1.0,1.0,1.0], shininess = 320.0) {
+		super(position, rotation);
+
+		this.objFname = objFname;
+		this.color = color;
+		
+		this.lightPos = lightPos;
+		this.ambientLight = ambientLight;
+		this.lightColor = lightColor;
+		this.shininess = shininess;
+
+		this.initAll();
+		loadShaders(this);
+	}
+
+	initAll() {
+		loadObjFile(this);
+	}
+
+	endLoad() {
+		this.mesh.textureImage = load2DTextureBuffer('textures/obj_texture.png');
+	}
+
+	setShadersParams() {
+		if (this.wireActive) {
+			super.setShadersParams();
+			return;
+		}
+
+		gl.useProgram(this.shader);
+
+		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
+		gl.enableVertexAttribArray(this.shader.vAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
+		gl.enableVertexAttribArray(this.shader.nAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		this.shader.tAttrib = gl.getAttribLocation(this.shader, "aTextureCoord");
+		gl.enableVertexAttribArray(this.shader.tAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
+		gl.vertexAttribPointer(this.shader.tAttrib, this.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		
+		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
+		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
+		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
+		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
+		this.shader.uAmbientColor = gl.getUniformLocation(this.shader, "uAmbientColor");
+		this.shader.uLightColor = gl.getUniformLocation(this.shader, "uLightColor");
+		this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
+		this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
+		this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.textureImage);
+		gl.uniform1i(this.shader.uSampler, 0);
+	}
+	
+	// --------------------------------------------
+	setMatrixUniforms() {
+		super.setMatrixUniforms();
+		if (this.wireActive) {
+			return;
+		}
+		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform4f(this.shader.uLightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2], this.lightColor[3]);
+		gl.uniform3f(this.shader.uLightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
+		gl.uniform4f(this.shader.uAmbientColor, this.ambientLight[0], this.ambientLight[1], this.ambientLight[2], this.ambientLight[3]);
+		gl.uniform1i(this.shader.uUseTexture, 1);
+		gl.uniform1i(this.shader.uUseNormalMap, 0);
+		gl.uniform1f(this.shader.uShininess, this.shininess);
+	}
+	
+	// --------------------------------------------
+	setColor(col) {
+		this.color = col;
+	}
+}
+
 // =====================================================
 // MAP 3D, construit a partir d'une heightmap
 // =====================================================
 class map3D extends WireframeObject {
-    constructor(map, position = vec3.create([0, 0, 0]), rotation = vec3.create([0, 0, 0]), color = vec3.create([1, 1, 1]), ampl=1.5, x=-1, y=-1, z=0, dx=2.0, dy=2.0) {
-        super(position, rotation);
+    constructor(map, position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], ampl=1.5, x=-1, y=-1, z=0, dx=2.0, dy=2.0, lightPos = [0.0,0.0,0.0], ambientLight = [0.1,0.1,0.1,1.0], lightColor = [1.0,1.0,1.0,1.0], shininess = 1024.0, waterLevel = 0.065) {
+        super(position, rotation, "heightmaps");
         
         this.map = map;
         this.color = color;
@@ -406,7 +432,8 @@ class map3D extends WireframeObject {
 			indices: [],
             vertexBuffer: null,
             normalBuffer: null,
-            indexBuffer: null
+            indexBuffer: null,
+			textureBuffer: null
         };
         this.width = map.length;
         this.height = map[0].length;
@@ -416,6 +443,11 @@ class map3D extends WireframeObject {
         this.dx = dx;
         this.dy = dy;
         this.ampl = 0.5;
+		this.lightColor = lightColor;
+		this.lightPos = lightPos;
+		this.ambientLight = ambientLight;
+		this.shininess = shininess;
+		this.waterLevel = waterLevel;
 
         this.initAll();
 
@@ -439,7 +471,6 @@ class map3D extends WireframeObject {
             }
         }
 
-
 		// Création des indices
 		for (let i = 0; i < this.width-1; i++) {
             for (let j = 0; j < this.height-1; j++) {
@@ -453,49 +484,60 @@ class map3D extends WireframeObject {
 			}
 		}
 
-		// Calcul des normales (en utilisant les indices)
-		// Calcul des coordonnées
+		// Calcul des coordonnées de texture
+		for (let i = 0; i < this.mesh.vertices.length; i += 3) {
+			const x = this.mesh.vertices[i];
+			const y = this.mesh.vertices[i + 1];
+			
+			const u = (x - this.x) / this.dx;
+			const v = (y - this.y) / this.dy;
+
+			this.mesh.textures.push(u, v);
+		}
+
+		// Calcul des normales
+		// Version optimisable en utilisant les valeurs déjà calculées
         for (let i = 0; i < this.width; i++) {
             for (let j = 0; j < this.height; j++) {
 
-				const ip = Math.min(i + 1, this.width - 1);
-				const jp = Math.min(j + 1, this.height - 1);
+                const ip = Math.min(i + 1, this.width - 1);
+                const jp = Math.min(j + 1, this.height - 1);
 
-				const x1 = this.x + ((i / this.width) * this.dx);
-				const y1 = this.y + ((j / this.height) * this.dy);
-				const z1 = this.map[i][j] * this.ampl;
+                const x1 = this.x + ((i / this.width) * this.dx);
+                const y1 = this.y + ((j / this.height) * this.dy);
+                const z1 = this.map[i][j] * this.ampl;
 
-				const x2 = this.x + ((ip / this.width) * this.dx);
-				const y2 = this.y + ((j / this.height) * this.dy);
-				const z2 = this.map[ip][j] * this.ampl;
+                const x2 = this.x + ((ip / this.width) * this.dx);
+                const y2 = this.y + ((j / this.height) * this.dy);
+                const z2 = this.map[ip][j] * this.ampl;
 
-				const x3 = this.x + ((ip / this.width) * this.dx);
-				const y3 = this.y + ((jp / this.height) * this.dy);
-				const z3 = this.map[ip][jp] * this.ampl;
+                const x3 = this.x + ((ip / this.width) * this.dx);
+                const y3 = this.y + ((jp / this.height) * this.dy);
+                const z3 = this.map[ip][jp] * this.ampl;
 
-				const x4 = this.x + ((i / this.width) * this.dx);
-				const y4 = this.y + (((jp) / this.height) * this.dy);
-				const z4 = this.map[i][jp] * this.ampl;
-				
-				const v1 = vec3.create([x2 - x1, y2 - y1, z2 - z1]);
-				const v2 = vec3.create([x3 - x2, y3 - y2, z3 - z2]);
-				const n1 = vec3.create();
-				vec3.cross(v1, v2, n1);
-				vec3.normalize(n1);
+                const x4 = this.x + ((i / this.width) * this.dx);
+                const y4 = this.y + (((jp) / this.height) * this.dy);
+                const z4 = this.map[i][jp] * this.ampl;
+                
+                const v1 = vec3.create([x2 - x1, y2 - y1, z2 - z1]);
+                const v2 = vec3.create([x3 - x2, y3 - y2, z3 - z2]);
+                const n1 = vec3.create();
+                vec3.cross(v1, v2, n1);
+                vec3.normalize(n1);
 
-				const v3 = vec3.create([x3 - x1, y3 - y1, z3 - z1]);
-				const v4 = vec3.create([x4 - x3, y4 - y3, z4 - z3]);
-				const n2 = vec3.create();
-				vec3.cross(v3, v4, n2);
-				vec3.normalize(n2);
+                const v3 = vec3.create([x3 - x1, y3 - y1, z3 - z1]);
+                const v4 = vec3.create([x4 - x3, y4 - y3, z4 - z3]);
+                const n2 = vec3.create();
+                vec3.cross(v3, v4, n2);
+                vec3.normalize(n2);
 
-				const n = vec3.create();
-				vec3.add(n1, n2, n);
-				vec3.normalize(n);
+                const n = vec3.create();
+                vec3.add(n1, n2, n);
+                vec3.normalize(n);
 
-				this.mesh.vertexNormals.push(n[0], n[1], n[2]);
-			}
-		}
+                this.mesh.vertexNormals.push(n[0], n[1], n[2]);
+            }
+        }
 
         // Création et remplissage des buffers WebGL pour vertices et normales
 		this.mesh.vertexBuffer = gl.createBuffer();
@@ -510,11 +552,11 @@ class map3D extends WireframeObject {
 		this.mesh.normalBuffer.itemSize = 3;
 		this.mesh.normalBuffer.numItems = this.mesh.vertexNormals.length / 3;
 
-		// this.mesh.textureBuffer = gl.createBuffer();
-		// gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
-		// gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.textures), gl.STATIC_DRAW);
-		// this.mesh.textureBuffer.itemSize = 2;
-		// this.mesh.textureBuffer.numItems = this.mesh.textures.length / 2;
+		this.mesh.textureBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.textures), gl.STATIC_DRAW);
+		this.mesh.textureBuffer.itemSize = 2;
+		this.mesh.textureBuffer.numItems = this.mesh.textures.length / 2;
 
 		this.mesh.indexBuffer = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.indexBuffer);
@@ -522,7 +564,9 @@ class map3D extends WireframeObject {
 		this.mesh.indexBuffer.itemSize = 1;
 		this.mesh.indexBuffer.numItems = this.mesh.indices.length;
 
-		this.mesh.texture = load2DTextureBuffer('textures/height_color.png');
+		this.mesh.texture = load2DTextureBuffer('textures/floor.jpg');
+		this.mesh.heightTexture = load2DTextureBuffer('textures/height_color.png');
+		this.mesh.normalMap = load2DTextureBuffer('normalmaps/water.jpg');
     }
 
     // Définir les paramètres des shaders
@@ -544,15 +588,35 @@ class map3D extends WireframeObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
 		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
+		this.shader.tAttrib = gl.getAttribLocation(this.shader, "aTextureCoord");
+		gl.enableVertexAttribArray(this.shader.tAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.textureBuffer);
+		gl.vertexAttribPointer(this.shader.tAttrib, this.mesh.textureBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
 		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
 		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
 		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
-		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+		this.shader.uHeightSampler = gl.getUniformLocation(this.shader, "uHeightSampler");
+		this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
+		this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
+		this.shader.uLightColor = gl.getUniformLocation(this.shader, "uLightColor");
+		this.shader.uAmbientColor = gl.getUniformLocation(this.shader, "uAmbientColor");
+		this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
+		this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
+		this.shader.uWaterLevel = gl.getUniformLocation(this.shader, "uWaterLevel");
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.mesh.texture);
 		gl.uniform1i(this.shader.uSampler, 0);
+
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.heightTexture);
+		gl.uniform1i(this.shader.uHeightSampler, 1);
+
+		gl.activeTexture(gl.TEXTURE2);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.normalMap);
+		gl.uniform1i(this.shader.uNormalMap, 2);
 	}
 
     // Définir les matrices des shaders
@@ -561,7 +625,12 @@ class map3D extends WireframeObject {
 		if (this.wireActive) {
 			return;
 		}
-		gl.uniform1i(this.shader.uUseTexture, 1);
+		gl.uniform4f(this.shader.uLightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2], this.lightColor[3]);
+		gl.uniform3f(this.shader.uLightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
+		gl.uniform4f(this.shader.uAmbientColor, this.ambientLight[0], this.ambientLight[1], this.ambientLight[2], this.ambientLight[3]);
+		gl.uniform1f(this.shader.uShininess, this.shininess);
+		gl.uniform1i(this.shader.uUseNormalMap, 1);
+		gl.uniform1f(this.shader.uWaterLevel, this.waterLevel);
 	}
 
     // Changer la couleur de l'objet
