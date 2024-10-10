@@ -47,7 +47,7 @@ void main(void)
 
 	vec3 ambient = vec3(uAmbientColor) * vec3(vColor);
     vec3 diffuse = (vColor * weight) * vec3(uLightColor) * (2.0 / 3.1415);
-    vec3 color = ambient + diffuse + spec * vec3(uLightColor);
+    vec3 color = ambient + diffuse + spec * vec3(uLightColor) * vNormalMapCoeff;
 
     gl_FragColor = vec4(color, 1.0);
 }

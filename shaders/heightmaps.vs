@@ -24,6 +24,8 @@ void main(void) {
 	if (aVertexPosition.z < uWaterLevel) {
 		tempPos.z = uWaterLevel;
 		vNormalMapCoeff = 1.0;
+	} else {
+		vNormalMapCoeff = pow((1.0 - (aVertexPosition.z - uWaterLevel)), 60.0);
 	}
 
 	vPos3D = uMVMatrix * vec4(tempPos,1.0);

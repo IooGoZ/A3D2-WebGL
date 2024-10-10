@@ -420,7 +420,7 @@ class objmesh extends WireframeObject {
 // MAP 3D, construit a partir d'une heightmap
 // =====================================================
 class map3D extends WireframeObject {
-    constructor(map, position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], ampl=1.5, x=-1, y=-1, z=0, dx=2.0, dy=2.0, lightPos = [0.0,0.0,0.0], ambientLight = [0.1,0.1,0.1,1.0], lightColor = [1.0,1.0,1.0,1.0], shininess = 1024.0, waterLevel = 0.065) {
+    constructor(map, position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], ampl=1.5, x=-1, y=-1, z=0, dx=2.0, dy=2.0, lightPos = [0.0,0.0,0.0], ambientLight = [0.1,0.1,0.1,1.0], lightColor = [1.0,1.0,1.0,1.0], shininess = 1024.0, waterLevel = 0.08) {
         super(position, rotation, "heightmaps");
         
         this.map = map;
