@@ -48,7 +48,9 @@ function loadImage(imgName, divider=1) {
                 for (var k=0; k<divider; k++) {
                     for (var l=0; l<divider; l++) {
                         var data = ctx.getImageData(i+k, j+l, 1, 1).data;
-                        var height = data[0] / 255.0;
+                        // var height = data[0] /255.0; // couleur rgb
+                        var height = rgbToLab(data[0], data[1], data[2])[0] /100.0; // couleur lab
+
                         sum += height;
                     }
                 }
