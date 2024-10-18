@@ -639,3 +639,137 @@ class map3D extends WireframeObject {
     }
 }
 
+
+// =====================================================
+// BOITE ENGLOBEANTE
+// =====================================================
+
+class BoundingBox extends WireframeObject {
+	constructor(position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0) {
+		super(position, rotation, 'box');
+		this.color = color;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.dx = dx;
+		this.dy = dy;
+		this.dz = dz;
+
+		this.mesh = {};
+
+		this.initAll();
+		loadShaders(this);
+	}
+
+	initAll() {
+		this.mesh.vertices = [
+			this.x, this.y, this.z,
+			this.x + this.dx, this.y, this.z,
+			this.x + this.dx, this.y + this.dy, this.z,
+			this.x, this.y + this.dy, this.z,
+			this.x, this.y, this.z + this.dz,
+			this.x + this.dx, this.y, this.z + this.dz,
+			this.x + this.dx, this.y + this.dy, this.z + this.dz,
+			this.x, this.y + this.dy, this.z + this.dz
+		];
+
+		this.mesh.indices = [
+			0, 2, 1,
+			0, 3, 2,
+			0, 1, 4,
+			0, 4, 3,
+			1, 2, 6,
+			1, 5, 4,
+			1, 6, 5,
+			2, 3, 6,
+			3, 4, 7,
+			3, 7, 6,
+			4, 5, 7,
+			5, 6, 7
+		];
+
+		this.mesh.normals = [
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0, 1.0, -1.0,
+			-1.0, 1.0, -1.0,
+			-1.0, -1.0, 1.0,
+			1.0, -1.0, 1.0,
+			1.0, 1.0, 1.0,
+			-1.0, 1.0, 1.0
+		];
+
+		this.mesh.vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.vertices), gl.STATIC_DRAW);
+		this.mesh.vertexBuffer.itemSize = 3;
+		this.mesh.vertexBuffer.numItems = this.mesh.vertices.length / 3;
+
+		this.mesh.indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.mesh.indices), gl.STATIC_DRAW);
+		this.mesh.indexBuffer.itemSize = 1;
+		this.mesh.indexBuffer.numItems = this.mesh.indices.length;
+
+		this.mesh.normalBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.normals), gl.STATIC_DRAW);
+		this.mesh.normalBuffer.itemSize = 3;
+		this.mesh.vertexBuffer.numItems = this.mesh.normals.length / 3;
+	}
+
+	setShadersParams() {
+		if (this.wireActive) {
+			super.setShadersParams();
+			return;
+		}
+
+		gl.useProgram(this.shader);
+
+		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
+		gl.enableVertexAttribArray(this.shader.vAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
+		gl.enableVertexAttribArray(this.shader.nAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		
+		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
+		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
+		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
+		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
+		this.shader.uAmbientColor = gl.getUniformLocation(this.shader, "uAmbientColor");
+		this.shader.uLightColor = gl.getUniformLocation(this.shader, "uLightColor");
+		this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
+		this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
+		this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
+
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.textureImage);
+		gl.uniform1i(this.shader.uSampler, 0);
+	}
+	
+	// --------------------------------------------
+	setMatrixUniforms() {
+		super.setMatrixUniforms();
+		if (this.wireActive) {
+			return;
+		}
+		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
+		gl.uniform3f(this.shader.uLightPos, 0.0, 0.0, 0.0);
+		gl.uniform4f(this.shader.uAmbientColor, 0.2, 0.2, 0.2, 1.0);
+		gl.uniform1i(this.shader.uUseTexture, 1);
+		gl.uniform1i(this.shader.uUseNormalMap, 0);
+		gl.uniform1f(this.shader.uShininess, 320.0);
+	}
+
+	setColor(col) {
+		this.color = col;
+	}
+}
