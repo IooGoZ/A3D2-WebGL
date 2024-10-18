@@ -64,9 +64,15 @@ function handleMouseMove(event) {
 		rotY += degToRad(deltaX / 5);
 		rotX += degToRad(deltaY / 5);
 
+		var maxRotX = degToRad(55); 
+		var minRotX = degToRad(-90);
+
+		rotX = Math.max(minRotX, Math.min(maxRotX, rotX));
+
 		mat4.identity(rotMatrix);
 		mat4.rotate(rotMatrix, rotX, [1, 0, 0]);
 		mat4.rotate(rotMatrix, rotY, [0, 0, 1]);
+		
 	}
 	
 	lastMouseX = newX
@@ -93,6 +99,54 @@ function rgbToHex(r, g, b) {
 	g = Math.floor(g*255);
 	b = Math.floor(b*255);
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+}
+
+function rgbToLab(r, g, b) {
+    // Helper function to convert RGB to XYZ
+    function rgbToXyz(r, g, b) {
+        r = r / 255;
+        g = g / 255;
+        b = b / 255;
+
+        r = r > 0.04045 ? Math.pow((r + 0.055) / 1.055, 2.4) : r / 12.92;
+        g = g > 0.04045 ? Math.pow((g + 0.055) / 1.055, 2.4) : g / 12.92;
+        b = b > 0.04045 ? Math.pow((b + 0.055) / 1.055, 2.4) : b / 12.92;
+
+        r = r * 100;
+        g = g * 100;
+        b = b * 100;
+
+        // Observer. = 2°, Illuminant = D65
+        const x = r * 0.4124 + g * 0.3576 + b * 0.1805;
+        const y = r * 0.2126 + g * 0.7152 + b * 0.0722;
+        const z = r * 0.0193 + g * 0.1192 + b * 0.9505;
+
+        return [x, y, z];
+    }
+
+    // Helper function to convert XYZ to LAB
+    function xyzToLab(x, y, z) {
+        const refX =  95.047;
+        const refY = 100.000;
+        const refZ = 108.883;
+
+        x = x / refX;
+        y = y / refY;
+        z = z / refZ;
+
+        x = x > 0.008856 ? Math.pow(x, 1/3) : (7.787 * x) + (16 / 116);
+        y = y > 0.008856 ? Math.pow(y, 1/3) : (7.787 * y) + (16 / 116);
+        z = z > 0.008856 ? Math.pow(z, 1/3) : (7.787 * z) + (16 / 116);
+
+        const l = (116 * y) - 16;
+        const a = 500 * (x - y);
+        const b = 200 * (y - z);
+
+        return [l, a, b];
+    }
+
+    const [x, y, z] = rgbToXyz(r, g, b);
+    return xyzToLab(x, y, z);
 }
 
 // =====================================================

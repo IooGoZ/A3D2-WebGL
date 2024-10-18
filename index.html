@@ -99,59 +99,103 @@
 					</thead>
 					<thead>
 						<tr>
+							<th>Use texture :</th>
+							<th>
+								<input type="checkbox" id="texture" checked="false" onchange="changeTexture()">
+							</th>
+						</tr>
+					</thead>
+					<thead>
+						<tr>
 							<th>Wireframe :</th>
 							<th>
 								<input type="checkbox" id="wireframe" checked="false" onchange="changeWireframe()">
 							</th>
 						</tr>
 					</thead>
+					<thead>
+						<tr>
+							<th>Use normal map :</th>
+							<th>
+								<input type="checkbox" id="normal" checked="false" onchange="changeNormal()">
+							</th>
+						</tr>
+					</thead>
 				</table>
+
+				<div id="heightmap"> 
+					<h3>Heightmap : </h3>
+
+					<table>
+						<thead>
+							<tr>
+								<th>
+									Depuis une texture : 
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr> 
+								<td>
+										<button onclick="loadImage('texture1.png')">Texture 1</button>
+										<button onclick="loadImage('texture2.png')">Texture 2</button>
+										<button onclick="loadImage('texture3.png')">Texture 3</button>
+										<button onclick="loadImage('texture4.png')">Texture 4</button>
+									
+								</td>
+							</tr>
+						</tbody>
+						<thead>
+							<tr>
+								<th>
+									Bruit de Perlin : 
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr>
+								<td>
+									<div id="perlin-parameters">
+										<button onclick="resetGradients()">Reset Gradients</button><br/>
+										<label for="perlin-scale">Scale</label>
+										<input type="range" id="perlin-scale" min="0.001" max="0.05" value="0.01" step="0.0005" onchange="handleGeneratePerlin()"><br/>
+										<label for="perlin-amplitude">Amplitude</label>
+										<input type="range" id="perlin-amplitude" min="0" max="5" value="2" step="0.01" onchange="handleGeneratePerlin()"><br/>
+										<label for="perlin-persistence">Persistence</label>
+										<input type="range" id="perlin-persistence" min="0" max="1" value="0.5" step="0.01" onchange="handleGeneratePerlin()"><br/>
+										<label for="perlin-octaves">Octaves</label>
+										<input type="range" id="perlin-octaves" min="0" max="10" value="8" step="0.01" onchange="handleGeneratePerlin()"><br/>
+										<label for="perlin-contrast">Contrast</label>
+										<input type="range" id="perlin-contrast" min="0" max="2" value="1" step="0.01" onchange="handleGeneratePerlin()"><br/>
+										<button onclick="handleGeneratePerlin()">Generate</button>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+				<div id="color-heightmap">
+				</div>
 			</div>
 		</div>
 		<div class="container" id="center-container" style="max-width:60vw;">
 			<div class="content" style="max-height: 50vh;">
 				<canvas id="WebGL-test" style="border:none;" width="3840" height="2160" oncontextmenu="return false;"></canvas>
 			</div>
-			<div class="hcontainer">
-				<div id="hm-left-part" class="content">
-					<h1>Heightmap</h1>
-					<h2 class="content">From Texture</h2>
-					<div id="objects-selector">
-						<button onclick="loadImage('texture1.png')">Texture 1</button>
-						<button onclick="loadImage('texture2.png')">Texture 2</button>
-						<button onclick="loadImage('texture3.png')">Texture 3</button>
-						<button onclick="loadImage('texture4.png')">Texture 4</button>
-					</div>
-					<h2 class="content">From Perlin</h2>
-					<div id="perlin-parameters">
-						<button onclick="resetGradients()">Reset Gradients</button><br/>
-						<label for="perlin-scale">Scale</label>
-						<input type="range" id="perlin-scale" min="0.001" max="0.05" value="0.01" step="0.0005" onchange="handleGeneratePerlin()"><br/>
-						<label for="perlin-amplitude">Amplitude</label>
-						<input type="range" id="perlin-amplitude" min="0" max="5" value="2" step="0.01" onchange="handleGeneratePerlin()"><br/>
-						<label for="perlin-persistence">Persistence</label>
-						<input type="range" id="perlin-persistence" min="0" max="1" value="0.5" step="0.01" onchange="handleGeneratePerlin()"><br/>
-						<label for="perlin-octaves">Octaves</label>
-						<input type="range" id="perlin-octaves" min="0" max="10" value="8" step="0.01" onchange="handleGeneratePerlin()"><br/>
-						<label for="perlin-contrast">Contrast</label>
-						<input type="range" id="perlin-contrast" min="0" max="2" value="1" step="0.01" onchange="handleGeneratePerlin()"><br/>
-						<button onclick="handleGeneratePerlin()">Generate</button>
-					</div>
-				</div>
 				<div id="hm-right-part" class="content">
-					<h2 class="content">Result</h2>
+					<h3 class="content">Resultat : </h3>
 					<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
 				</div>
 			</div>
 		</div>
 		<div class="container" id="right-container">
 			<div id="selector">
-				<h1 class="content">Object Selection</h1>
+				<h3 >Objets sur la scene : </h3>
 				<select  id="object-selector" multiple onchange="changeObject()">
 
 				</select>
 				<button class="content" onclick="deleteSelected()">Remove Object</button>
-				<h2 class="content">Add Object</h2>
+				<h3>Ajouter des objets : </h3>
 				<div id="objects-selector">
 					<button onclick="addMeshObj('bunny.obj')">Stanford's Bunny</button>
 					<button onclick="addMeshObj('mustang.obj')">Mustang</button>

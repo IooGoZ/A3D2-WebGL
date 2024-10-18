@@ -341,7 +341,8 @@ class objmesh extends WireframeObject {
 		this.ambientLight = ambientLight;
 		this.lightColor = lightColor;
 		this.shininess = shininess;
-
+		this.useTexture = true;
+		
 		this.initAll();
 		loadShaders(this);
 	}
@@ -405,7 +406,7 @@ class objmesh extends WireframeObject {
 		gl.uniform4f(this.shader.uLightColor, this.lightColor[0], this.lightColor[1], this.lightColor[2], this.lightColor[3]);
 		gl.uniform3f(this.shader.uLightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
 		gl.uniform4f(this.shader.uAmbientColor, this.ambientLight[0], this.ambientLight[1], this.ambientLight[2], this.ambientLight[3]);
-		gl.uniform1i(this.shader.uUseTexture, 1);
+		gl.uniform1i(this.shader.uUseTexture, this.useTexture ? 1 : 0);
 		gl.uniform1i(this.shader.uUseNormalMap, 0);
 		gl.uniform1f(this.shader.uShininess, this.shininess);
 	}
@@ -413,6 +414,14 @@ class objmesh extends WireframeObject {
 	// --------------------------------------------
 	setColor(col) {
 		this.color = col;
+	}
+
+	switchTextureState() {
+		this.useTexture = !this.useTexture;
+	}
+
+	getTextureState() {
+		return this.useTexture;
 	}
 }
 
@@ -448,6 +457,8 @@ class map3D extends WireframeObject {
 		this.ambientLight = ambientLight;
 		this.shininess = shininess;
 		this.waterLevel = waterLevel;
+		this.useTexture = true;
+		this.useNormalMap = true;
 
         this.initAll();
 
@@ -605,6 +616,8 @@ class map3D extends WireframeObject {
 		this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
 		this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
 		this.shader.uWaterLevel = gl.getUniformLocation(this.shader, "uWaterLevel");
+		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
 
 		gl.activeTexture(gl.TEXTURE0);
 		gl.bindTexture(gl.TEXTURE_2D, this.mesh.texture);
@@ -629,14 +642,32 @@ class map3D extends WireframeObject {
 		gl.uniform3f(this.shader.uLightPos, this.lightPos[0], this.lightPos[1], this.lightPos[2]);
 		gl.uniform4f(this.shader.uAmbientColor, this.ambientLight[0], this.ambientLight[1], this.ambientLight[2], this.ambientLight[3]);
 		gl.uniform1f(this.shader.uShininess, this.shininess);
-		gl.uniform1i(this.shader.uUseNormalMap, 1);
+		gl.uniform1i(this.shader.uUseNormalMap, this.useNormalMap ? 1 : 0);
 		gl.uniform1f(this.shader.uWaterLevel, this.waterLevel);
+		gl.uniform1i(this.shader.uUseTexture, this.useTexture ? 1 : 0);
+		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
 	}
 
     // Changer la couleur de l'objet
     setColor(col) {
         this.color = col;
     }
+
+	switchTextureState() {
+		this.useTexture = !this.useTexture;
+	}
+
+	getTextureState() {
+		return this.useTexture;
+	}
+
+	switchNormalState() {
+		this.useNormalMap = !this.useNormalMap;
+	}
+
+	getNormalState() {
+		return this.useNormalMap;
+	}
 }
 
 

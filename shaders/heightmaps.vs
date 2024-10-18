@@ -9,6 +9,7 @@ uniform vec3 uColor;
 uniform sampler2D uSampler;
 uniform sampler2D uHeightSampler;
 uniform float uWaterLevel;
+uniform bool uUseTexture;
 
 varying vec3 vColor;
 varying vec4 vPos3D;
@@ -32,13 +33,17 @@ void main(void) {
 	vNormal = aVertexNormal;
 	vTexCoords = aTextureCoord;
 
-	float heightFactor = (1.0 - tempPos.z * 2.0) ;
-	vec2 texCoord = vec2(heightFactor, heightFactor);
+	if (uUseTexture) {
+		float heightFactor = (1.0 - tempPos.z * 2.0) ;
+		vec2 texCoord = vec2(heightFactor, heightFactor);
 
-	vec3 colHeight = texture2D(uHeightSampler, texCoord).rgb;
-	vec3 colText = texture2D(uSampler, aTextureCoord).rgb;
+		vec3 colHeight = texture2D(uHeightSampler, texCoord).rgb;
+		vec3 colText = texture2D(uSampler, aTextureCoord).rgb;
 
-	vColor = colHeight * 0.6 + colText * 0.4;
+		vColor = colHeight * 0.6 + colText * 0.4;
+	} else {
+		vColor = uColor;
+	}
   
 	gl_Position = uPMatrix * vPos3D;
 }

@@ -1,4 +1,4 @@
-// Author : Tom BOIREAU
+// Author : Léna PROUST & Tom BOIREAU
 
 // Ce fichier gère la sélection d'objets 3D, et permet de modifier leurs paramètres (position, rotation, couleur)
 
@@ -37,6 +37,8 @@ function initSelector() {
     rotZElem = document.getElementById("rotZ");
     colorElem = document.getElementById("color");
     wireframeElem = document.getElementById("wireframe");
+    textureElem = document.getElementById("texture");
+    normalElem = document.getElementById("normal");
 
     // Charger le système de heightmap
     initHeightmap();
@@ -101,6 +103,22 @@ function select(obj) {
         wireframeElem.checked = false;
         wireframeElem.disabled = true;
     }
+
+    try {
+        textureElem.checked = obj.getTextureState();
+        textureElem.disabled = false;
+    } catch (e) {
+        textureElem.checked = false;
+        textureElem.disabled = true;
+    }
+
+    try {
+        normalElem.checked = obj.getNormalState();
+        normalElem.disabled = false;
+    } catch (e) {
+        normalElem.checked = false;
+        normalElem.disabled = true;
+    }
 }
 
 // =====================================================
@@ -129,13 +147,6 @@ function addMeshObj(objName) {
 // =====================================================
 function addHeightmapObj(objName="Heightmap") {
     const obj = new map3D(getHeightmap(), position=DEF_POSITION, rotation=DEF_ROTATION, color=DEF_COLOR);
-
-    return addObj(objName, obj);
-}
-
-// =====================================================
-function addBoundingBox(objName="BoundingBox") {
-    const obj = new BoundingBox();
 
     return addObj(objName, obj);
 }
@@ -200,5 +211,25 @@ function changeWireframe() {
         wireframeElem.checked = selectedObject.getWireState();
     } catch (e) {
         wireframeElem.checked = false;
+    }
+}
+
+// =====================================================
+function changeTexture() {
+    try {
+        selectedObject.switchTextureState();
+        textureElem.checked = selectedObject.getTextureState();
+    } catch (e) {
+        textureElem.checked = false;
+    }
+}
+
+// =====================================================
+function changeNormal() {
+    try {
+        selectedObject.switchNormalState();
+        normalElem.checked = selectedObject.getNormalState();
+    } catch (e) {
+        normalElem.checked = false;
     }
 }
