@@ -134,6 +134,13 @@ function addHeightmapObj(objName="Heightmap") {
 }
 
 // =====================================================
+function addBoundingBox(objName="BoundingBox") {
+    const obj = new BoundingBox();
+
+    return addObj(objName, obj);
+}
+
+// =====================================================
 function deleteSelected() {
     var index = sceneObjects.indexOf(selectedObject);
     if (index > -1) {
