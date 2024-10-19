@@ -47,8 +47,10 @@ function initSelector() {
     addObj("Plane", new plane());
     obj = addMeshObj('porsche.obj');
 
-    handleGeneratePerlin();
-    addHeightmapObj();
+    //handleGeneratePerlin();
+    //addHeightmapObj();
+
+    addBoundingBox();
 }
 
 // =====================================================
@@ -147,6 +149,13 @@ function addMeshObj(objName) {
 // =====================================================
 function addHeightmapObj(objName="Heightmap") {
     const obj = new map3D(getHeightmap(), position=DEF_POSITION, rotation=DEF_ROTATION, color=DEF_COLOR);
+
+    return addObj(objName, obj);
+}
+
+// =====================================================
+function addBoundingBox(objName="BoundingBox") {
+    const obj = new BoundingBox(DEF_POSITION, DEF_ROTATION, DEF_COLOR);
 
     return addObj(objName, obj);
 }
