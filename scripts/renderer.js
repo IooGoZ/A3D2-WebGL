@@ -2,6 +2,7 @@
 
 // =====================================================
 var gl;
+var canvas;
 
 // =====================================================
 var mvMatrix = mat4.create();
@@ -35,7 +36,7 @@ function initGL(canvas)
 // =====================================================
 function webGLStart() {
 	
-	var canvas = document.getElementById("WebGL-test");
+	canvas = document.getElementById("WebGL-test");
 
 	canvas.onmousedown = handleMouseDown;
 	document.onmouseup = handleMouseUp;

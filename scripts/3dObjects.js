@@ -687,6 +687,7 @@ class BoundingBox extends WireframeObject {
 		this.dz = dz;
 
 		this.mesh = {};
+		this.useTexture = true;
 
 		this.initAll();
 		loadShaders(this);
@@ -747,6 +748,11 @@ class BoundingBox extends WireframeObject {
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.normals), gl.STATIC_DRAW);
 		this.mesh.normalBuffer.itemSize = 3;
 		this.mesh.vertexBuffer.numItems = this.mesh.normals.length / 3;
+
+		this.mesh.heightmap = load2DTextureBuffer('heightmaps/texture2.png');
+		this.mesh.texture = load2DTextureBuffer('textures/floor.jpg');
+		this.mesh.heightTexture = load2DTextureBuffer('textures/height_color.png');
+		this.mesh.normalMap = load2DTextureBuffer('normalmaps/water.jpg');
 	}
 
 	setShadersParams() {
@@ -772,17 +778,34 @@ class BoundingBox extends WireframeObject {
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
 		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
 		this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
-		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		this.shader.uHeightmap = gl.getUniformLocation(this.shader, "uHeightmap");
 		this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
 		this.shader.uAmbientColor = gl.getUniformLocation(this.shader, "uAmbientColor");
 		this.shader.uLightColor = gl.getUniformLocation(this.shader, "uLightColor");
 		this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
 		this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
 		this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
+		this.shader.uCameraParams = gl.getUniformLocation(this.shader, "uCameraParams");
+		this.shader.uAmplitude = gl.getUniformLocation(this.shader, "uAmplitude");
+		this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		this.shader.uHeightSampler = gl.getUniformLocation(this.shader, "uHeightSampler");
+		this.shader.uWaterLevel = gl.getUniformLocation(this.shader, "uWaterLevel");
 
 		gl.activeTexture(gl.TEXTURE0);
-		gl.bindTexture(gl.TEXTURE_2D, this.mesh.textureImage);
-		gl.uniform1i(this.shader.uSampler, 0);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.heightmap);
+		gl.uniform1i(this.shader.uHeightmap, 0);
+
+		gl.activeTexture(gl.TEXTURE1);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.texture);
+		gl.uniform1i(this.shader.uSampler, 1);
+
+		gl.activeTexture(gl.TEXTURE2);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.heightTexture);
+		gl.uniform1i(this.shader.uHeightSampler, 2);
+
+		gl.activeTexture(gl.TEXTURE3);
+		gl.bindTexture(gl.TEXTURE_2D, this.mesh.normalMap);
+		gl.uniform1i(this.shader.uNormalMap, 3);
 	}
 	
 	// --------------------------------------------
@@ -792,15 +815,26 @@ class BoundingBox extends WireframeObject {
 			return;
 		}
 		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
+		gl.uniform1f(this.shader.uAmplitude, 0.1);
 		gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
-		gl.uniform3f(this.shader.uLightPos, 0.0, 0.0, 0.0);
+		gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);
 		gl.uniform4f(this.shader.uAmbientColor, 0.2, 0.2, 0.2, 1.0);
-		gl.uniform1i(this.shader.uUseTexture, 1);
-		gl.uniform1i(this.shader.uUseNormalMap, 0);
+		gl.uniform1i(this.shader.uUseTexture, this.useTexture ? 1 : 0);
+		gl.uniform1i(this.shader.uUseNormalMap, 1);
 		gl.uniform1f(this.shader.uShininess, 320.0);
+		gl.uniform1f(this.shader.uWaterLevel, 0.08);
 	}
 
 	setColor(col) {
 		this.color = col;
+	}
+
+	switchTextureState() {
+		this.useTexture = !this.useTexture;
+	}
+
+	getTextureState() {
+		return this.useTexture;
 	}
 }
