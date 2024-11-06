@@ -17,8 +17,6 @@ varying vec2 vTexCoords;
 // ==============================================
 void main(void)
 {
-    vec3 lightColor = vec3(0.8, 0.8, 0.8);
-
     vec3 normal;
     if (uUseNormalMap) {
         normal = texture2D(uNormalMap, vTexCoords).xyz;
