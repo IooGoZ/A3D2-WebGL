@@ -88,7 +88,7 @@ function compileShaders(Obj3D)
 
 // =====================================================
 // Code from https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Using_textures_in_WebGL
-function load2DTextureBuffer(url) {
+function load2DTextureBufferFromURL(url) {
 	var texture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, texture);
 
@@ -130,6 +130,49 @@ function load2DTextureBuffer(url) {
 	
 
 	image.src = url;
+
+	return texture;
+}
+
+
+function load2DTextureBufferFromImage(image) {
+	var texture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+
+	const level = 0;
+	const internalFormat = gl.RGBA;
+	const width = 1;
+	const height = 1;
+	const border = 0;
+	const srcFormat = gl.RGBA;
+	const srcType = gl.UNSIGNED_BYTE;
+	const pixel = new Uint8Array([0, 0, 255, 255]); // opaque blue
+	gl.texImage2D(
+		gl.TEXTURE_2D,
+		level,
+		internalFormat,
+		width,
+		height,
+		border,
+		srcFormat,
+		srcType,
+		pixel,
+	);
+
+	if (image) {
+
+		gl.bindTexture(gl.TEXTURE_2D, texture);
+		gl.texImage2D(
+			gl.TEXTURE_2D,
+			level,
+			internalFormat,
+			srcFormat,
+			srcType,
+			image,
+		);
+
+		gl.generateMipmap(gl.TEXTURE_2D);
+	}
 
 	return texture;
 }
@@ -352,7 +395,7 @@ class objmesh extends WireframeObject {
 	}
 
 	endLoad() {
-		this.mesh.textureImage = load2DTextureBuffer('textures/obj_texture.png');
+		this.mesh.textureImage = load2DTextureBufferFromURL('textures/obj_texture.png');
 	}
 
 	setShadersParams() {
@@ -575,9 +618,9 @@ class map3D extends WireframeObject {
 		this.mesh.indexBuffer.itemSize = 1;
 		this.mesh.indexBuffer.numItems = this.mesh.indices.length;
 
-		this.mesh.texture = load2DTextureBuffer('textures/floor.jpg');
-		this.mesh.heightTexture = load2DTextureBuffer('textures/height_color.png');
-		this.mesh.normalMap = load2DTextureBuffer('normalmaps/water.jpg');
+		this.mesh.texture = load2DTextureBufferFromURL('textures/floor.jpg');
+		this.mesh.heightTexture = load2DTextureBufferFromURL('textures/height_color.png');
+		this.mesh.normalMap = load2DTextureBufferFromURL('normalmaps/water.jpg');
     }
 
     // Définir les paramètres des shaders
@@ -676,9 +719,10 @@ class map3D extends WireframeObject {
 // =====================================================
 
 class BoundingBox extends WireframeObject {
-	constructor(position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0) {
+	constructor(position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0, amplitude = 0.1) {
 		super(position, rotation, 'box');
 		this.color = color;
+		this.amplitude = amplitude;
 		this.x = x;
 		this.y = y;
 		this.z = z;
@@ -749,10 +793,10 @@ class BoundingBox extends WireframeObject {
 		this.mesh.normalBuffer.itemSize = 3;
 		this.mesh.vertexBuffer.numItems = this.mesh.normals.length / 3;
 
-		this.mesh.heightmap = load2DTextureBuffer('heightmaps/texture2.png');
-		this.mesh.texture = load2DTextureBuffer('textures/floor.jpg');
-		this.mesh.heightTexture = load2DTextureBuffer('textures/height_color.png');
-		this.mesh.normalMap = load2DTextureBuffer('normalmaps/water.jpg');
+		this.mesh.heightmap = load2DTextureBufferFromImage(selectedHeightmapImage);
+		this.mesh.texture = load2DTextureBufferFromURL('textures/floor.jpg');
+		this.mesh.heightTexture = load2DTextureBufferFromURL('textures/height_color.png');
+		this.mesh.normalMap = load2DTextureBufferFromURL('normalmaps/water.jpg');
 	}
 
 	setShadersParams() {
@@ -816,7 +860,7 @@ class BoundingBox extends WireframeObject {
 		}
 		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
 		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
-		gl.uniform1f(this.shader.uAmplitude, 0.1);
+		gl.uniform1f(this.shader.uAmplitude, this.amplitude);
 		gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
 		gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);
 		gl.uniform4f(this.shader.uAmbientColor, 0.2, 0.2, 0.2, 1.0);
@@ -836,5 +880,13 @@ class BoundingBox extends WireframeObject {
 
 	getTextureState() {
 		return this.useTexture;
+	}
+
+	setAmplitude(amp) {
+		this.amplitude = amp;
+	}
+
+	getAmplitude() {
+		return this.amplitude;
 	}
 }

@@ -39,6 +39,7 @@ function initSelector() {
     wireframeElem = document.getElementById("wireframe");
     textureElem = document.getElementById("texture");
     normalElem = document.getElementById("normal");
+    amplElem = document.getElementById("amplitude");
 
     // Charger le système de heightmap
     initHeightmap();
@@ -49,8 +50,6 @@ function initSelector() {
 
     //handleGeneratePerlin();
     //addHeightmapObj();
-
-    addBoundingBox();
 }
 
 // =====================================================
@@ -120,6 +119,14 @@ function select(obj) {
     } catch (e) {
         normalElem.checked = false;
         normalElem.disabled = true;
+    }
+
+    try {
+        amplElem.value = obj.getAmplitude();
+        amplElem.disabled = false;
+    } catch (e) {
+        amplElem.value = 1;
+        amplElem.disabled = true;
     }
 }
 
@@ -240,5 +247,15 @@ function changeNormal() {
         normalElem.checked = selectedObject.getNormalState();
     } catch (e) {
         normalElem.checked = false;
+    }
+}
+
+// =====================================================
+function changeAmplitude() {
+    try {
+        var amplValue = parseFloat(amplElem.value);
+        selectedObject.setAmplitude(amplValue);
+    } catch (e) {
+        amplElem.disabled = true;
     }
 }
