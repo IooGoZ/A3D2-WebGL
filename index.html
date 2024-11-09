@@ -121,6 +121,14 @@
 							</th>
 						</tr>
 					</thead>
+					<thead>
+						<tr>
+							<th>Height Amplitude</th>
+							<th>
+								<input type="range" id="amplitude" min="0.0" max="0.5" value="0.1" step="0.01" oninput="changeAmplitude()">
+							</th>
+						</tr>
+					</thead>
 				</table>
 
 				<div id="heightmap"> 
@@ -157,6 +165,8 @@
 								<td>
 									<div id="perlin-parameters">
 										<button onclick="resetGradients()">Reset Gradients</button><br/>
+										<label for="perlin-rgb">RGB</label>
+										<input type="checkbox" id="perlin-rgb" checked="false" onchange="handleGeneratePerlin()"><br/>
 										<label for="perlin-scale">Scale</label>
 										<input type="range" id="perlin-scale" min="0.001" max="0.05" value="0.01" step="0.0005" onchange="handleGeneratePerlin()"><br/>
 										<label for="perlin-amplitude">Amplitude</label>

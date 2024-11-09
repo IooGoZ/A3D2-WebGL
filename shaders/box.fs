@@ -108,16 +108,16 @@ void main(void) {
 
         // Calcul de la coordonnée de texture
         texCoord = vec2(voxel.x / textureSize, voxel.y / textureSize);
-        height = rgbToLab(texture2D(uHeightmap, texCoord).rgb).x;
+        height = rgbToLab(texture2D(uHeightmap, texCoord).rgb).x * uAmplitude;
 
         // Optionnel : ajustement de la hauteur avec la carte de normales
         if (uUseNormalMap) {
-            height = height * uAmplitude < uWaterLevel ? uWaterLevel / uAmplitude : height;
-            waterable = (height * uAmplitude) <= uWaterLevel;
+            height = height < uWaterLevel ? uWaterLevel : height;
+            waterable = height<= uWaterLevel;
         }
 
         // Vérification de la hauteur
-        if (P.z < height * uAmplitude) {
+        if (P.z < height) {
             startShadowP = P;// + (1. / textureSize) * 2;  // Ajustement du point pour éviter les artefacts d’ombre
             hit = true;
             break;
@@ -206,9 +206,9 @@ void main(void) {
                     break;
                 } else {
                     vec2 shadowTexCoord = vec2(shadowVoxel.x / textureSize, shadowVoxel.y / textureSize);
-                    float shadowHeight = rgbToLab(texture2D(uHeightmap, shadowTexCoord).rgb).x;
+                    float shadowHeight = rgbToLab(texture2D(uHeightmap, shadowTexCoord).rgb).x * uAmplitude;
                     
-                    if (shadowP.z < shadowHeight * uAmplitude) {
+                    if (shadowP.z < shadowHeight) {
                         inShadow = true;
                         break;
                     }

@@ -6,6 +6,8 @@ var selectedHeightmap = null;
 
 var resultElem = null;
 
+var selectedHeightmapImage = null;
+
 
 // =====================================================
 // FONCTIONS GENERALES, INITIALISATIONS
@@ -59,6 +61,7 @@ function loadImage(imgName, divider=1) {
             }
         }
 
+        selectedHeightmapImage = img;
     }
 }
 
@@ -73,7 +76,7 @@ function resetGradients() {
 
 
 // =====================================================
-function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave = 2, contrast = 0.5) {
+function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave = 2, contrast = 0.5, rgb = false) {
     var heightmap = new Array(width);
 
     var ctx = resultElem.getContext("2d");
@@ -84,38 +87,70 @@ function generateHeightmap(scale = 1, amplitude = 1, persistence = 0.5, octave =
 
     ctx.clearRect(0, 0, width + 1, height + 1);
 
-    for (var i=0; i<width; i++) {
-        heightmap[i] = new Array(height);
-        for (var j=0; j<height; j++) {
-            let noise = perlinOctaves(i * scale, j * scale, gradients, octave, persistence) * amplitude;
-            noise = adjustContrast(noise, contrast);
-            // Normalisation entre -1 et 1, puis 0 à 1
-            //noise = noise ;
-            //noise = Math.max(0, Math.min(1, noise));
-
-            heightmap[i][j] = noise;
-
-            // Utiliser le bruit pour définir une couleur en niveaux de gris
-            let colorValue = Math.floor(255 * noise);
-            ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
-            ctx.fillRect(i, j, 1, 1);
-
+    if (rgb) {
+        for (var i=0; i<width; i++) {
+            heightmap[i] = new Array(height);
+            for (var j=0; j<height; j++) {
+                let noiseR = perlinOctaves(i * scale, j * scale, gradients, octave, persistence) * amplitude;
+                let noiseG = perlinOctaves(0.5 * i * scale, 1.5 * j * scale, gradients, octave, persistence) * amplitude;
+                let noiseB = perlinOctaves(1.5 * i * scale, 0.5 *j * scale, gradients, octave, persistence) * amplitude;
+                noiseR = adjustContrast(noiseR, contrast);
+                noiseG = adjustContrast(noiseG, contrast);
+                noiseB = adjustContrast(noiseB, contrast);
+                // Normalisation entre -1 et 1, puis 0 à 1
+                //noise = noise ;
+                //noise = Math.max(0, Math.min(1, noise));
+    
+                heightmap[i][j] = (noiseR + noiseG + noiseB) / 3;
+    
+                // Utiliser le bruit pour définir une couleur en niveaux de gris
+                let colorValueR = Math.floor(255 * noiseR);
+                let colorValueG = Math.floor(255 * noiseG);
+                let colorValueB = Math.floor(255 * noiseB);
+                ctx.fillStyle = `rgb(${colorValueR}, ${colorValueG}, ${colorValueB})`;
+                ctx.fillRect(i, j, 1, 1);
+    
+            }
+        }
+    } else {
+        for (var i=0; i<width; i++) {
+            heightmap[i] = new Array(height);
+            for (var j=0; j<height; j++) {
+                let noise = perlinOctaves(i * scale, j * scale, gradients, octave, persistence) * amplitude;
+                noise = adjustContrast(noise, contrast);
+                // Normalisation entre -1 et 1, puis 0 à 1
+                //noise = noise ;
+                //noise = Math.max(0, Math.min(1, noise));
+    
+                heightmap[i][j] = noise;
+    
+                // Utiliser le bruit pour définir une couleur en niveaux de gris
+                let colorValue = Math.floor(255 * noise);
+                ctx.fillStyle = `rgb(${colorValue}, ${colorValue}, ${colorValue})`;
+                ctx.fillRect(i, j, 1, 1);
+    
+            }
         }
     }
 
+    
+
     selectedHeightmap = heightmap;
+    selectedHeightmapImage = new Image();
+    selectedHeightmapImage.src = resultElem.toDataURL();
 }
     
 
 // =====================================================
 function handleGeneratePerlin() {
+    var rgb = document.getElementById("perlin-rgb").checked;
     var scale = parseFloat(document.getElementById("perlin-scale").value);
     var amplitude = parseFloat(document.getElementById("perlin-amplitude").value);
     var persistence = parseFloat(document.getElementById("perlin-persistence").value);
     var octave = parseFloat(document.getElementById("perlin-octaves").value);
     var contrast = parseFloat(document.getElementById("perlin-contrast").value);
 
-    generateHeightmap(scale, amplitude, persistence, octave, contrast);
+    generateHeightmap(scale, amplitude, persistence, octave, contrast, rgb);
 }
 
 // BRUIT DE PERLIN =====================================================
