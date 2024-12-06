@@ -1,4 +1,4 @@
-// Autor: Tom BOIREAU (sur la base d'un code fourni par Nicolas COURILLEAU)
+// Autor: Léna PROUST & Tom BOIREAU (sur la base d'un code fourni par Nicolas COURILLEAU)
 
 // =====================================================
 // Mouse management
@@ -65,7 +65,7 @@ function handleMouseMove(event) {
 		rotX += degToRad(deltaY / 5);
 
 		var maxRotX = degToRad(55); 
-		var minRotX = degToRad(-90);
+		var minRotX = degToRad(-80);
 
 		rotX = Math.max(minRotX, Math.min(maxRotX, rotX));
 
