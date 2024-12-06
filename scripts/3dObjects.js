@@ -890,3 +890,180 @@ class BoundingBox extends WireframeObject {
 		return this.amplitude;
 	}
 }
+
+// =====================================================
+// BOITE ENGLOBEANTE VOLUMIQUE
+// =====================================================
+
+class VolumeBox extends WireframeObject {
+	constructor(position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0, amplitude = 0.1) {
+		super(position, rotation, 'volume');
+		this.color = color;
+		this.amplitude = amplitude;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+		this.dx = dx;
+		this.dy = dy;
+		this.dz = dz;
+
+		this.mesh = {};
+		this.useTexture = true;
+
+		this.initAll();
+		loadShaders(this);
+	}
+
+	initAll() {
+		this.mesh.vertices = [
+			this.x, this.y, this.z,
+			this.x + this.dx, this.y, this.z,
+			this.x + this.dx, this.y + this.dy, this.z,
+			this.x, this.y + this.dy, this.z,
+			this.x, this.y, this.z + this.dz,
+			this.x + this.dx, this.y, this.z + this.dz,
+			this.x + this.dx, this.y + this.dy, this.z + this.dz,
+			this.x, this.y + this.dy, this.z + this.dz
+		];
+
+		this.mesh.indices = [
+			0, 2, 1,
+			0, 3, 2,
+			0, 1, 4,
+			0, 4, 3,
+			1, 2, 6,
+			1, 5, 4,
+			1, 6, 5,
+			2, 3, 6,
+			3, 4, 7,
+			3, 7, 6,
+			4, 5, 7,
+			5, 6, 7
+		];
+
+		this.mesh.normals = [
+			-1.0, -1.0, -1.0,
+			1.0, -1.0, -1.0,
+			1.0, 1.0, -1.0,
+			-1.0, 1.0, -1.0,
+			-1.0, -1.0, 1.0,
+			1.0, -1.0, 1.0,
+			1.0, 1.0, 1.0,
+			-1.0, 1.0, 1.0
+		];
+
+		this.mesh.vertexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.vertices), gl.STATIC_DRAW);
+		this.mesh.vertexBuffer.itemSize = 3;
+		this.mesh.vertexBuffer.numItems = this.mesh.vertices.length / 3;
+
+		this.mesh.indexBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.mesh.indexBuffer);
+		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(this.mesh.indices), gl.STATIC_DRAW);
+		this.mesh.indexBuffer.itemSize = 1;
+		this.mesh.indexBuffer.numItems = this.mesh.indices.length;
+
+		this.mesh.normalBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.mesh.normals), gl.STATIC_DRAW);
+		this.mesh.normalBuffer.itemSize = 3;
+		this.mesh.vertexBuffer.numItems = this.mesh.normals.length / 3;
+
+		// this.mesh.heightmap = load2DTextureBufferFromImage(selectedHeightmapImage);
+		// this.mesh.texture = load2DTextureBufferFromURL('textures/floor.jpg');
+		// this.mesh.heightTexture = load2DTextureBufferFromURL('textures/height_color.png');
+		// this.mesh.normalMap = load2DTextureBufferFromURL('normalmaps/water.jpg');
+	}
+
+	setShadersParams() {
+		if (this.wireActive) {
+			super.setShadersParams();
+			return;
+		}
+
+		gl.useProgram(this.shader);
+
+		this.shader.vAttrib = gl.getAttribLocation(this.shader, "aVertexPosition");
+		gl.enableVertexAttribArray(this.shader.vAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
+		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
+
+		this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
+		gl.enableVertexAttribArray(this.shader.nAttrib);
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		
+		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
+		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
+		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
+		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		// this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
+		// this.shader.uHeightmap = gl.getUniformLocation(this.shader, "uHeightmap");
+		// this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
+		// this.shader.uAmbientColor = gl.getUniformLocation(this.shader, "uAmbientColor");
+		// this.shader.uLightColor = gl.getUniformLocation(this.shader, "uLightColor");
+		// this.shader.uShininess = gl.getUniformLocation(this.shader, "uShininess");
+		// this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
+		// this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
+		this.shader.uCameraParams = gl.getUniformLocation(this.shader, "uCameraParams");
+		// this.shader.uAmplitude = gl.getUniformLocation(this.shader, "uAmplitude");
+		// this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
+		// this.shader.uHeightSampler = gl.getUniformLocation(this.shader, "uHeightSampler");
+		// this.shader.uWaterLevel = gl.getUniformLocation(this.shader, "uWaterLevel");
+
+		// gl.activeTexture(gl.TEXTURE0);
+		// gl.bindTexture(gl.TEXTURE_2D, this.mesh.heightmap);
+		// gl.uniform1i(this.shader.uHeightmap, 0);
+
+		// gl.activeTexture(gl.TEXTURE1);
+		// gl.bindTexture(gl.TEXTURE_2D, this.mesh.texture);
+		// gl.uniform1i(this.shader.uSampler, 1);
+
+		// gl.activeTexture(gl.TEXTURE2);
+		// gl.bindTexture(gl.TEXTURE_2D, this.mesh.heightTexture);
+		// gl.uniform1i(this.shader.uHeightSampler, 2);
+
+		// gl.activeTexture(gl.TEXTURE3);
+		// gl.bindTexture(gl.TEXTURE_2D, this.mesh.normalMap);
+		// gl.uniform1i(this.shader.uNormalMap, 3);
+	}
+	
+	// --------------------------------------------
+	setMatrixUniforms() {
+		super.setMatrixUniforms();
+		if (this.wireActive) {
+			return;
+		}
+		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
+		// gl.uniform1f(this.shader.uAmplitude, this.amplitude);
+		// gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
+		// gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);
+		// gl.uniform4f(this.shader.uAmbientColor, 0.2, 0.2, 0.2, 1.0);
+		// gl.uniform1i(this.shader.uUseTexture, this.useTexture ? 1 : 0);
+		// gl.uniform1i(this.shader.uUseNormalMap, 1);
+		// gl.uniform1f(this.shader.uShininess, 320.0);
+		// gl.uniform1f(this.shader.uWaterLevel, 0.08);
+	}
+
+	setColor(col) {
+		this.color = col;
+	}
+
+	switchTextureState() {
+		this.useTexture = !this.useTexture;
+	}
+
+	getTextureState() {
+		return this.useTexture;
+	}
+
+	setAmplitude(amp) {
+		this.amplitude = amp;
+	}
+
+	getAmplitude() {
+		return this.amplitude;
+	}
+}

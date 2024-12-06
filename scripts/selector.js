@@ -168,6 +168,13 @@ function addBoundingBox(objName="BoundingBox") {
 }
 
 // =====================================================
+function addVolumeBox(objName="VolumeBox") {
+    const obj = new VolumeBox(DEF_POSITION, DEF_ROTATION, DEF_COLOR);
+
+    return addObj(objName, obj);
+}
+
+// =====================================================
 function deleteSelected() {
     var index = sceneObjects.indexOf(selectedObject);
     if (index > -1) {
