@@ -1,4 +1,4 @@
-// Author : Tom BOIREAU
+// Author : Léna PROUST & Tom BOIREAU
 
 var heightmapFolder = "heightmaps/";
 

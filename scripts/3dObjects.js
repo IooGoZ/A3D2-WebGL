@@ -1,4 +1,4 @@
-// Autor: Tom BOIREAU (sur la base d'un code fourni par Nicolas COURILLEAU)
+// Autor: Léna PROUST & Tom BOIREAU (sur la base d'un code fourni par Nicolas COURILLEAU)
 
 var shadersFolder = 'shaders/';
 var objFolder = 'objects/';
