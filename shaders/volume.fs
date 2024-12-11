@@ -1,21 +1,21 @@
 #version 300 es
 
-precision highp float;
+precision lowp float;
 
-uniform highp sampler3D uVolumeSampler;
+uniform lowp sampler3D uVolumeSampler;
 
 
 uniform mat4 uRMatrix;
 // uniform sampler2D uNormalMap;
 // uniform bool uUseNormalMap;
-uniform int uNbSamplers;
 
 uniform vec3 uCameraParams;
+uniform float uResolution;
 // uniform vec3 uLightPos;
 // uniform float uShininess;
 // uniform vec4 uLightColor;
 // uniform vec4 uAmbientColor;
-uniform vec3 uColor;
+uniform vec4 uClearColor;
 // uniform sampler2D uHeightmap;
 // uniform bool uUseTexture;
 // uniform float uAmplitude;
@@ -29,11 +29,6 @@ in mat4 vRiMatrix;
 in mat4 vMVMatrix;
 out vec4 fragColor;
 
-const int sizeTexture = 512;
-const int nbSampler = 16;
-const int nbTexturesPerSamplers = sizeTexture/nbSampler;
-const int nbTexturesPerRow = int(sqrt(float(nbTexturesPerSamplers)));
-
 // ==============================================
 // On suppose que vous avez un tableau de textures 2D
 float getGrayLevel(vec3 P) {
@@ -45,11 +40,32 @@ float getGrayLevel(vec3 P) {
     return max(col.r, max(col.g, col.b));
 }
 
+// ==============================================
+vec4 colorRamp(float t) {
+    vec4 c1 = vec4(0.0, 0.0, 1.0, 1.0);
+    vec4 c2 = vec4(0.0, 1.0, 0.0, 1.0);
+    vec4 c3 = vec4(1.0, 0.0, 0.0, 1.0);
+    vec4 c4 = vec4(1.0, 1.0, 0.0, 1.0);
+    vec4 c5 = vec4(1.0, 1.0, 1.0, 1.0);
+
+    if (t < 0.15) {
+        return mix(c1, c2, t / 0.2);
+    } else if (t < 0.20) {
+        return mix(c2, c3, (t - 0.2) / 0.2);
+    } else if (t < 0.25) {
+        return mix(c3, c4, (t - 0.4) / 0.2);
+    } else if (t < 0.30) {
+        return mix(c4, c5, (t - 0.6) / 0.2);
+    } else {
+        return c5;
+    }
+}
+
 
 // ==============================================
 void main(void) {
 
-    float textureSize = float(sizeTexture);
+    float textureSize = uResolution;
 
     // Calcul des paramètres de caméra
     vec2 pix = vPosCam.xy / vPosCam.w;
@@ -61,10 +77,7 @@ void main(void) {
     vec3 dir = (vRiMatrix * vec4(dirCam, -1.0)).xyz;
 
     vec3 P = vPos3D.xyz;
-    vec3 startShadowP = P;
-    vec2 texCoord = vec2(0.0, 0.0);
     bool hit = false;
-    bool waterable = false;
 
     // Initialisation du parcours de voxel
     vec3 voxel = (vPos3D.xyz + vec3(1, 1, -1)) * textureSize / 2.0;
@@ -75,23 +88,41 @@ void main(void) {
 
     vec4 finalColor = vec4(0.0, 0.0, 0.0, 0.0);
 
-    for (int i = 0; i < 1594; i++) {
+    for (int i = 0; i < int(textureSize * 3.0); i++) {
         P = (voxel / (textureSize/ 2.0)) - vec3(1.0, 1.0, -1.0);
 
         // Vérification des limites de la bounding box
         if (P.x < -1.0 || P.x > 1.0 || P.y < -1.0 || P.y > 1.0 || P.z < 0.0 || P.z > 2.0) {
-            discard; // Si on sort de la bounding box
+            break;
+            //discard; // Si on sort de la bounding box
         }
 
         float grayLvl = getGrayLevel(P);
-        finalColor = vec4(grayLvl, grayLvl, grayLvl, grayLvl);
+        if (grayLvl > 0.1)
+            finalColor += colorRamp(grayLvl) * grayLvl * grayLvl;
+
+            if (grayLvl > 0.3) {
+                hit = true;
+                break;
+            }
 
         // Vérification de la hauteur
-        if (finalColor.a > 0.2) {
-            startShadowP = P;
-            hit = true;
-            break;
-        }
+        // if (grayLvl > 0.3) {
+        //     finalColor = vec4(1.0, 0.0, 0.0, grayLvl);
+        //     hit = true;
+        //     break;
+        // } 
+        // else if (grayLvl > 0.5) {
+        //     finalColor = vec4(0.0, 1.0, 0.0, grayLvl);
+        //     hit = true;
+        //     break;
+        // } 
+        // else if (grayLvl > 0.1) {
+        //     finalColor = vec4(0.0, 0.0, 1.0, grayLvl);
+        //     startShadowP = P;
+        //     hit = true;
+        //     break;
+        // }
         
         if (maxDist.x <= maxDist.y && maxDist.x <= maxDist.z) {
             // Avance en x
@@ -112,7 +143,9 @@ void main(void) {
 
     // Si on a pas touché la surface, on discard
     if (!hit) {
-        discard;
+        vec4 col = uClearColor - finalColor;
+        fragColor = vec4(col.rgb, 1.0);
+        // discard;
     } else {
         fragColor = vec4(finalColor.rgb, 1.0);
     }

@@ -40,6 +40,7 @@ function initSelector() {
     textureElem = document.getElementById("texture");
     normalElem = document.getElementById("normal");
     amplElem = document.getElementById("amplitude");
+    resolutionElem = document.getElementById("resolution");
 
     // Charger le système de heightmap
     initHeightmap();
@@ -128,6 +129,15 @@ function select(obj) {
         amplElem.value = 1;
         amplElem.disabled = true;
     }
+
+    try {
+        resolutionElem.value = obj.getResolution();
+        resolutionElem.disabled = false;
+    } catch (e) {
+        resolutionElem.value = 512.0;
+        resolutionElem.disabled = true;
+    }
+
 }
 
 // =====================================================
@@ -225,6 +235,16 @@ function changeColor() {
 	COLOR = vec3.create([colR, colG, colB]);
 
 	selectedObject.setColor(COLOR);
+}
+
+// =====================================================
+function changeResolution() {
+    try {
+        var resValue = parseFloat(resolutionElem.value);
+        selectedObject.setResolution(resValue);
+    } catch (e) {
+        resolutionElem.disabled = true;
+    }
 }
 
 // =====================================================

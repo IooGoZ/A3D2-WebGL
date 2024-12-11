@@ -30,6 +30,10 @@ input {
   font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
 }
 
+input:disabled {
+  opacity: 0.5;
+}
+
 input[type="range"]::-moz-range-progress {
   background-color: #1282A2;
 }

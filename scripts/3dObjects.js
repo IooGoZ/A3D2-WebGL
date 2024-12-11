@@ -982,6 +982,7 @@ class VolumeBox extends WireframeObject {
 
 		this.mesh = {};
 		this.useTexture = true;
+		this.resolution = 512.0;
 
 		this.initAll().then(() => {
 			loadShaders(this);
@@ -1075,8 +1076,9 @@ class VolumeBox extends WireframeObject {
 		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
 		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
-		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uClearColor = gl.getUniformLocation(this.shader, "uClearColor");
 		this.shader.uNbSamplers = gl.getUniformLocation(this.shader, "uNbSamplers");
+		this.shader.uResolution = gl.getUniformLocation(this.shader, "uResolution");
 		// this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
 		// this.shader.uHeightmap = gl.getUniformLocation(this.shader, "uHeightmap");
 		// this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
@@ -1123,9 +1125,9 @@ class VolumeBox extends WireframeObject {
 		if (this.wireActive) {
 			return;
 		}
-		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
+		gl.uniform4f(this.shader.uClearColor, 0.78, 0.89, 0.91, 1.0);
 		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
-		gl.uniform1i(this.shader.uNbSamplers, 16);
+		gl.uniform1f(this.shader.uResolution, this.resolution);
 		// gl.uniform1f(this.shader.uAmplitude, this.amplitude);
 		// gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
 		// gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);
@@ -1134,6 +1136,14 @@ class VolumeBox extends WireframeObject {
 		// gl.uniform1i(this.shader.uUseNormalMap, 1);
 		// gl.uniform1f(this.shader.uShininess, 320.0);
 		// gl.uniform1f(this.shader.uWaterLevel, 0.08);
+	}
+
+	setResolution(res) {
+		this.resolution = res;
+	}
+
+	getResolution() {
+		return this.resolution;
 	}
 
 	setColor(col) {
