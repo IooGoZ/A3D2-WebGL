@@ -1,8 +1,14 @@
-precision mediump float;
+#version 300 es
+
+precision highp float;
+
+uniform highp sampler3D uVolumeSampler;
+
 
 uniform mat4 uRMatrix;
 // uniform sampler2D uNormalMap;
 // uniform bool uUseNormalMap;
+uniform int uNbSamplers;
 
 uniform vec3 uCameraParams;
 // uniform vec3 uLightPos;
@@ -17,15 +23,33 @@ uniform vec3 uColor;
 // uniform sampler2D uHeightSampler;
 // uniform float uWaterLevel;
 
-varying vec4 vPos3D;
-varying vec4 vPosCam;
-varying mat4 vRiMatrix;
-varying mat4 vMVMatrix;
+in vec4 vPos3D;
+in vec4 vPosCam;
+in mat4 vRiMatrix;
+in mat4 vMVMatrix;
+out vec4 fragColor;
+
+const int sizeTexture = 512;
+const int nbSampler = 16;
+const int nbTexturesPerSamplers = sizeTexture/nbSampler;
+const int nbTexturesPerRow = int(sqrt(float(nbTexturesPerSamplers)));
+
+// ==============================================
+// On suppose que vous avez un tableau de textures 2D
+float getGrayLevel(vec3 P) {
+    // Transforme P dans le range [0, 1]
+    vec3 nP = vec3((P.x + 1.0) / 2.0, (P.y + 1.0) / 2.0, P.z / 2.0);
+
+    // Utiliser sampler2DArray avec l'index dynamique
+    vec3 col = texture(uVolumeSampler, nP).rgb;
+    return max(col.r, max(col.g, col.b));
+}
+
 
 // ==============================================
 void main(void) {
 
-    float textureSize = 512.0;
+    float textureSize = float(sizeTexture);
 
     // Calcul des paramètres de caméra
     vec2 pix = vPosCam.xy / vPosCam.w;
@@ -38,7 +62,6 @@ void main(void) {
 
     vec3 P = vPos3D.xyz;
     vec3 startShadowP = P;
-    float height = 0.0;
     vec2 texCoord = vec2(0.0, 0.0);
     bool hit = false;
     bool waterable = false;
@@ -50,7 +73,9 @@ void main(void) {
     
     vec3 maxDist = (floor(voxel) + step * 0.5 - voxel) * deltaDist;
 
-    for (int i = 0; i < 1536; i++) {
+    vec4 finalColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+    for (int i = 0; i < 1594; i++) {
         P = (voxel / (textureSize/ 2.0)) - vec3(1.0, 1.0, -1.0);
 
         // Vérification des limites de la bounding box
@@ -58,12 +83,12 @@ void main(void) {
             discard; // Si on sort de la bounding box
         }
 
-        // Calcul de la coordonnée de texture
-        height = 0.2;
+        float grayLvl = getGrayLevel(P);
+        finalColor = vec4(grayLvl, grayLvl, grayLvl, grayLvl);
 
         // Vérification de la hauteur
-        if (P.z < height) {
-            startShadowP = P;// + (1. / textureSize) * 2;  // Ajustement du point pour éviter les artefacts d’ombre
+        if (finalColor.a > 0.2) {
+            startShadowP = P;
             hit = true;
             break;
         }
@@ -89,6 +114,6 @@ void main(void) {
     if (!hit) {
         discard;
     } else {
-        gl_FragColor = vec4(uColor, 1.0);
+        fragColor = vec4(finalColor.rgb, 1.0);
     }
 }

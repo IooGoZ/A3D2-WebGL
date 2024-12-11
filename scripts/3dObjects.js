@@ -57,6 +57,79 @@ function loadShaderText(Obj3D,ext, shaderName) {   // lecture asynchrone...
   xhttp.send();
 }
 
+
+// =====================================================
+function downloadImageFromUint8Array(data, width, height, channels = 4, filename = 'image.png') {
+    // Vérification des dimensions
+    if (data.length !== width * height * channels) {
+        throw new Error('La taille du tableau Uint8Array ne correspond pas aux dimensions spécifiées.');
+    }
+
+    // Création d'un canvas
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+
+    // Création d'une image Data
+    const imageData = ctx.createImageData(width, height);
+
+    // Copie des données
+    for (let i = 0; i < data.length; i++) {
+        imageData.data[i] = data[i];
+    }
+
+    // Dessiner les données sur le canvas
+    ctx.putImageData(imageData, 0, 0);
+
+    // Convertir le canvas en URL de données
+    canvas.toBlob((blob) => {
+        // Créer un lien pour télécharger l'image
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = filename;
+
+        // Simuler un clic pour déclencher le téléchargement
+        link.click();
+
+        // Nettoyer l'URL de blob
+        URL.revokeObjectURL(link.href);
+    }, 'image/png');
+}
+
+
+// =====================================================
+async function loadRawFile(url, width, height, depth) {
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const buffer = await response.arrayBuffer();
+    const data = new Uint8Array(buffer);
+
+	const expectedSize = width * height * depth;
+    if (data.length !== expectedSize) {
+        console.error(`Taille des données incorrecte : attendue ${expectedSize}, reçue ${data.length}`);
+        return null;
+    }
+
+	const texture = gl.createTexture();
+	gl.bindTexture(gl.TEXTURE_3D, texture);
+
+	gl.texImage3D(gl.TEXTURE_3D, 0, gl.R8, width, height, depth, 0, gl.RED, gl.UNSIGNED_BYTE, data); // 1 canal, 8 bits par pixel, donc on utilise gl.R8 et gl.RED
+
+	gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+	gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE);
+	
+	gl.bindTexture(gl.TEXTURE_3D, null);
+
+    return texture;
+}
+
+
 // =====================================================
 function compileShaders(Obj3D)
 {
@@ -910,11 +983,12 @@ class VolumeBox extends WireframeObject {
 		this.mesh = {};
 		this.useTexture = true;
 
-		this.initAll();
-		loadShaders(this);
+		this.initAll().then(() => {
+			loadShaders(this);
+		});
 	}
 
-	initAll() {
+	async initAll() {
 		this.mesh.vertices = [
 			this.x, this.y, this.z,
 			this.x + this.dx, this.y, this.z,
@@ -974,6 +1048,10 @@ class VolumeBox extends WireframeObject {
 		// this.mesh.texture = load2DTextureBufferFromURL('textures/floor.jpg');
 		// this.mesh.heightTexture = load2DTextureBufferFromURL('textures/height_color.png');
 		// this.mesh.normalMap = load2DTextureBufferFromURL('normalmaps/water.jpg');
+
+		this.mesh.volumeTexture = await loadRawFile('raw/hnut512_uint.raw', 512, 512, 512).then((data) => {
+			return data;
+		});
 	}
 
 	setShadersParams() {
@@ -989,15 +1067,16 @@ class VolumeBox extends WireframeObject {
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.vertexBuffer);
 		gl.vertexAttribPointer(this.shader.vAttrib, this.mesh.vertexBuffer.itemSize, gl.FLOAT, false, 0, 0);
 
-		this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
-		gl.enableVertexAttribArray(this.shader.nAttrib);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
-		gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
+		// this.shader.nAttrib = gl.getAttribLocation(this.shader, "aVertexNormal");
+		// gl.enableVertexAttribArray(this.shader.nAttrib);
+		// gl.bindBuffer(gl.ARRAY_BUFFER, this.mesh.normalBuffer);
+		// gl.vertexAttribPointer(this.shader.nAttrib, this.mesh.normalBuffer.itemSize, gl.FLOAT, false, 0, 0);
 		
 		this.shader.rMatrixUniform = gl.getUniformLocation(this.shader, "uRMatrix");
 		this.shader.mvMatrixUniform = gl.getUniformLocation(this.shader, "uMVMatrix");
 		this.shader.pMatrixUniform = gl.getUniformLocation(this.shader, "uPMatrix");
 		this.shader.uColor = gl.getUniformLocation(this.shader, "uColor");
+		this.shader.uNbSamplers = gl.getUniformLocation(this.shader, "uNbSamplers");
 		// this.shader.uUseTexture = gl.getUniformLocation(this.shader, "uUseTexture");
 		// this.shader.uHeightmap = gl.getUniformLocation(this.shader, "uHeightmap");
 		// this.shader.uLightPos = gl.getUniformLocation(this.shader, "uLightPos");
@@ -1007,6 +1086,9 @@ class VolumeBox extends WireframeObject {
 		// this.shader.uUseNormalMap = gl.getUniformLocation(this.shader, "uUseNormalMap");
 		// this.shader.uNormalMap = gl.getUniformLocation(this.shader, "uNormalMap");
 		this.shader.uCameraParams = gl.getUniformLocation(this.shader, "uCameraParams");
+
+		this.shader.uVolumeSampler = gl.getUniformLocation(this.shader, 'uVolumeSampler');
+
 		// this.shader.uAmplitude = gl.getUniformLocation(this.shader, "uAmplitude");
 		// this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
 		// this.shader.uHeightSampler = gl.getUniformLocation(this.shader, "uHeightSampler");
@@ -1027,6 +1109,12 @@ class VolumeBox extends WireframeObject {
 		// gl.activeTexture(gl.TEXTURE3);
 		// gl.bindTexture(gl.TEXTURE_2D, this.mesh.normalMap);
 		// gl.uniform1i(this.shader.uNormalMap, 3);
+
+		// Passer la texture 3D au shader
+		gl.activeTexture(gl.TEXTURE0);
+		gl.bindTexture(gl.TEXTURE_3D, this.mesh.volumeTexture);
+		gl.uniform1i(this.shader.uVolumeSampler, 0);  // Passe la texture 3D à l'uniforme 'textures'
+
 	}
 	
 	// --------------------------------------------
@@ -1037,6 +1125,7 @@ class VolumeBox extends WireframeObject {
 		}
 		gl.uniform3f(this.shader.uColor, this.color[0], this.color[1], this.color[2]);
 		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
+		gl.uniform1i(this.shader.uNbSamplers, 16);
 		// gl.uniform1f(this.shader.uAmplitude, this.amplitude);
 		// gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
 		// gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);
