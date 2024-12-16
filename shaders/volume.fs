@@ -93,8 +93,12 @@ void main(void) {
 
         // Vérification des limites de la bounding box
         if (P.x < -1.0 || P.x > 1.0 || P.y < -1.0 || P.y > 1.0 || P.z < 0.0 || P.z > 2.0) {
-            break;
-            //discard; // Si on sort de la bounding box
+            float intensity = finalColor.r + finalColor.g + finalColor.b;
+            if (intensity > 0.1) {
+                break;
+            } else {
+                discard;
+            }
         }
 
         float grayLvl = getGrayLevel(P);

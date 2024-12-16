@@ -133,7 +133,7 @@
 						<tr>
 							<th>Resolution</th>
 							<th>
-								<input type="range" id="resolution" min="128.0" max="4096.0" value="512.0" step="64.0" oninput="changeResolution()">
+								<input type="range" id="resolution" min="128.0" max="2048.0" value="512.0" step="64.0" oninput="changeResolution()">
 							</th>
 						</tr>
 					</thead>
@@ -198,8 +198,14 @@
 		</div>
 		<div class="container" id="center-container" style="max-width:60vw;">
 			<div class="content" style="max-height: 60vh;">
-				<canvas id="WebGL-test" style="border:none;" width="1280" height="720" oncontextmenu="return false;"></canvas>
+				<canvas id="WebGL-test" style="border:none;" width="1920" height="1080" oncontextmenu="return false;"></canvas>
+				<script type="text/javascript">
+					var canvas = document.getElementById("WebGL-test");
+					canvas.width = window.innerWidth;
+					canvas.height = window.innerHeight;
+				</script>
 			</div>
+			<button onclick="canvas.requestFullscreen();">Fullscreen</button>
 				<div id="hm-right-part" class="content" style="max-height: 40vh;">
 					<h3 class="content">Resultat : </h3>
 					<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
