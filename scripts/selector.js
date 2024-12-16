@@ -45,6 +45,9 @@ function initSelector() {
     // Charger le système de heightmap
     initHeightmap();
 
+    // Charger le système de colorsRamp
+    initColors();
+    
     // Ajout des objets de la scène
     addObj("Plane", new plane());
     obj = addMeshObj('porsche.obj');

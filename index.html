@@ -11,6 +11,7 @@
 		<script type="text/javascript" src="scripts/selector.js"></script>
 		<script type="text/javascript" src="scripts/renderer.js"></script>
 		<script type="text/javascript" src="scripts/objLoader.js"></script>
+		<script type="text/javascript" src="scripts/colors.js"></script>
 		<script type="text/javascript" src="scripts/3dObjects.js"></script>
 		<script type="text/javascript" src="scripts/heightmap.js"></script>
 
@@ -207,8 +208,15 @@
 			</div>
 			<button onclick="canvas.requestFullscreen();">Fullscreen</button>
 				<div id="hm-right-part" class="content" style="max-height: 40vh;">
-					<h3 class="content">Resultat : </h3>
-					<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
+					<div>
+						<h3 class="content">Heightmap : </h3>
+						<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
+					</div>
+					<div>
+						<h3 class="content">ColorsRamp : </h3>
+						<input type="range" id="cr_min_threshold" min="0.0" max="1.0" value="0.1" step="0.00392157"/>
+						<input type="range" id="cr_max_threshold" min="0.0" max="1.0" value="0.1" step="0.00392157"/>
+					</div>
 				</div>
 			</div>
 		</div>

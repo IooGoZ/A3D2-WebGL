@@ -22,6 +22,9 @@ uniform vec4 uClearColor;
 // uniform sampler2D uSampler;
 // uniform sampler2D uHeightSampler;
 // uniform float uWaterLevel;
+uniform vec4 uTransfertColor[256];
+uniform float uMinThreshold;
+uniform float uMaxThreshold;
 
 in vec4 vPos3D;
 in vec4 vPosCam;
@@ -39,28 +42,6 @@ float getGrayLevel(vec3 P) {
     vec3 col = texture(uVolumeSampler, nP).rgb;
     return max(col.r, max(col.g, col.b));
 }
-
-// ==============================================
-vec4 colorRamp(float t) {
-    vec4 c1 = vec4(0.0, 0.0, 1.0, 1.0);
-    vec4 c2 = vec4(0.0, 1.0, 0.0, 1.0);
-    vec4 c3 = vec4(1.0, 0.0, 0.0, 1.0);
-    vec4 c4 = vec4(1.0, 1.0, 0.0, 1.0);
-    vec4 c5 = vec4(1.0, 1.0, 1.0, 1.0);
-
-    if (t < 0.15) {
-        return mix(c1, c2, t / 0.2);
-    } else if (t < 0.20) {
-        return mix(c2, c3, (t - 0.2) / 0.2);
-    } else if (t < 0.25) {
-        return mix(c3, c4, (t - 0.4) / 0.2);
-    } else if (t < 0.30) {
-        return mix(c4, c5, (t - 0.6) / 0.2);
-    } else {
-        return c5;
-    }
-}
-
 
 // ==============================================
 void main(void) {
@@ -94,7 +75,7 @@ void main(void) {
         // Vérification des limites de la bounding box
         if (P.x < -1.0 || P.x > 1.0 || P.y < -1.0 || P.y > 1.0 || P.z < 0.0 || P.z > 2.0) {
             float intensity = finalColor.r + finalColor.g + finalColor.b;
-            if (intensity > 0.1) {
+            if (intensity > uMinThreshold/3.0) {
                 break;
             } else {
                 discard;
@@ -102,31 +83,15 @@ void main(void) {
         }
 
         float grayLvl = getGrayLevel(P);
-        if (grayLvl > 0.1)
-            finalColor += colorRamp(grayLvl) * grayLvl * grayLvl;
-
-            if (grayLvl > 0.3) {
+        if (grayLvl > uMinThreshold) {
+            //finalColor += uTransfertColor[int(((grayLvl-uMinThreshold)/(uMaxThreshold-uMinThreshold))*255.0)];
+            finalColor += uTransfertColor[int(grayLvl * 255.0)];
+            if (grayLvl > uMaxThreshold) {
                 hit = true;
                 break;
             }
-
-        // Vérification de la hauteur
-        // if (grayLvl > 0.3) {
-        //     finalColor = vec4(1.0, 0.0, 0.0, grayLvl);
-        //     hit = true;
-        //     break;
-        // } 
-        // else if (grayLvl > 0.5) {
-        //     finalColor = vec4(0.0, 1.0, 0.0, grayLvl);
-        //     hit = true;
-        //     break;
-        // } 
-        // else if (grayLvl > 0.1) {
-        //     finalColor = vec4(0.0, 0.0, 1.0, grayLvl);
-        //     startShadowP = P;
-        //     hit = true;
-        //     break;
-        // }
+        }
+            
         
         if (maxDist.x <= maxDist.y && maxDist.x <= maxDist.z) {
             // Avance en x
@@ -147,7 +112,7 @@ void main(void) {
 
     // Si on a pas touché la surface, on discard
     if (!hit) {
-        vec4 col = uClearColor - finalColor;
+        vec4 col = finalColor;
         fragColor = vec4(col.rgb, 1.0);
         // discard;
     } else {
