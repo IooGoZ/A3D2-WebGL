@@ -1090,6 +1090,9 @@ class VolumeBox extends WireframeObject {
 		this.shader.uCameraParams = gl.getUniformLocation(this.shader, "uCameraParams");
 
 		this.shader.uVolumeSampler = gl.getUniformLocation(this.shader, 'uVolumeSampler');
+		this.shader.uTransfertColor = gl.getUniformLocation(this.shader, 'uTransfertColor');
+		this.shader.uMinThreshold = gl.getUniformLocation(this.shader, 'uMinThreshold');
+		this.shader.uMaxThreshold = gl.getUniformLocation(this.shader, 'uMaxThreshold');
 
 		// this.shader.uAmplitude = gl.getUniformLocation(this.shader, "uAmplitude");
 		// this.shader.uSampler = gl.getUniformLocation(this.shader, "uSampler");
@@ -1128,6 +1131,9 @@ class VolumeBox extends WireframeObject {
 		gl.uniform4f(this.shader.uClearColor, 0.78, 0.89, 0.91, 1.0);
 		gl.uniform3f(this.shader.uCameraParams, canvas.width, canvas.height, 45.0);
 		gl.uniform1f(this.shader.uResolution, this.resolution);
+		gl.uniform4fv(this.shader.uTransfertColor, getColorRamp());
+		gl.uniform1f(this.shader.uMinThreshold, getColorThreshMin());
+		gl.uniform1f(this.shader.uMaxThreshold, getColorThreshMax());
 		// gl.uniform1f(this.shader.uAmplitude, this.amplitude);
 		// gl.uniform4f(this.shader.uLightColor, 1.0, 1.0, 1.0, 1.0);
 		// gl.uniform3f(this.shader.uLightPos, -0.5, -1.0, 2.0);

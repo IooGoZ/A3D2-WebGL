@@ -184,3 +184,11 @@ select option:checked {
 #objects-selector button {
   margin: 5px 0;
 }
+
+#hm-right-part {
+  display: inline-flex;
+}
+
+#hm-right-part > div {
+  flex: 1;
+}
