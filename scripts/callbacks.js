@@ -101,6 +101,19 @@ function rgbToHex(r, g, b) {
 	return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
+function hexToRgb(hex) {
+    hex = hex.replace("#", "");
+    return [
+        parseInt(hex.substring(0, 2), 16) / 255,
+        parseInt(hex.substring(2, 4), 16) / 255,
+        parseInt(hex.substring(4, 6), 16) / 255
+    ];
+}
+
+function invertColor(rgb) {
+    return rgb.map(c => 1 - c);
+}
+
 function rgbToLab(r, g, b) {
     // Helper function to convert RGB to XYZ
     function rgbToXyz(r, g, b) {

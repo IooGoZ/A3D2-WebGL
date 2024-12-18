@@ -1049,8 +1049,12 @@ class VolumeBox extends WireframeObject {
 		// this.mesh.texture = load2DTextureBufferFromURL('textures/floor.jpg');
 		// this.mesh.heightTexture = load2DTextureBufferFromURL('textures/height_color.png');
 		// this.mesh.normalMap = load2DTextureBufferFromURL('normalmaps/water.jpg');
+    
+		// this.mesh.volumeTexture = await loadRawFile('raw/output.raw', 704, 704, 208).then((data) => {
+		// 	return data;
+		// });
 
-		this.mesh.volumeTexture = await loadRawFile('raw/noisette.raw', 512, 512, 512).then((data) => {
+		this.mesh.volumeTexture = await loadRawFile('raw/hnut512_uint.raw', 512, 512, 512).then((data) => {
 			return data;
 		});
 	}

@@ -72,6 +72,10 @@ button:active {
   color: #1282A2;
 }
 
+button:disabled {
+  opacity: 0.5;
+}
+
 select {
   display: inline-block;
   border: 2px solid #1282A2;
@@ -191,4 +195,26 @@ select option:checked {
 
 #hm-right-part > div {
   flex: 1;
+}
+
+table#colors-ramp {
+  width: 80%;
+  border-collapse: collapse;
+  border: 2px solid #1282A2;
+}
+
+table#colors-ramp > thead {
+  color: #C7E0E8;
+  background-color: #001F54;
+}
+
+table#colors-ramp > tbody {
+  overflow-y: scroll;
+}
+
+table#colors-ramp td, table#colors-ramp th {
+  padding: 5px;
+  border: 2px solid #1282A2;
+  text-align: center;
+  justify-content: center;
 }

@@ -213,9 +213,37 @@
 						<canvas id="heightmap-result" width="512" height="512" style="border:none;"></canvas>
 					</div>
 					<div>
-						<h3 class="content">ColorsRamp : </h3>
+						<h3 class="content">Volume : </h3>
 						<input type="range" id="cr_min_threshold" min="0.0" max="1.0" value="0.1" step="0.00392157"/>
 						<input type="range" id="cr_max_threshold" min="0.0" max="1.0" value="0.1" step="0.00392157"/>
+						<h3 class="content">ColorsRamp : </h3>
+						<table id="colors-ramp">
+							<thead>
+								<tr>
+									<th>Color</th>
+									<th>Threshold</th>
+									<th>Actions</th>
+								</tr>
+								<tr>
+									<td><input type="color" value="#ffffff" id="cr-color-add"/></td>
+									<td><input type="range" min="0.00392157" max="0.99607843" value="0.5" step="0.00392157" id="cr-threshold-add"/></td>
+									<td><button onclick="addColorToRamp()">Add</button></td>
+								</tr>
+							</thead>
+							<tbody id="colors-ramp-body">
+								<tr class="cr-color-special">
+									<td><input type="color" value="#C7E0E8" id="cr-color-min"/></td>
+									<td><input disabled type="range" min="0.0" max="1.0" value="0.0" id="cr-threashold-min"/></td>
+									<td><button disabled>Delete</button></td>
+								</tr>
+
+								<tr class="cr-color-special">
+									<td><input type="color" value="#00000" id="cr-color-max"/></td>
+									<td><input disabled type="range" min="0.0" max="1.0" value="1.0" id="cr-threashold-max"/></td>
+									<td><button disabled>Delete</button></td>
+								</tr>
+							</tbody>
+						</table>
 					</div>
 
 					<div class="container">
