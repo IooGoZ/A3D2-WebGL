@@ -181,8 +181,8 @@ function addBoundingBox(objName="BoundingBox") {
 }
 
 // =====================================================
-function addVolumeBox(objName="VolumeBox") {
-    const obj = new VolumeBox(DEF_POSITION, DEF_ROTATION, DEF_COLOR);
+function addVolumeBox(url, sizex, sizey, sizez, objName="VolumeBox") {
+    const obj = new VolumeBox([url, sizex, sizey, sizez], DEF_POSITION, DEF_ROTATION, DEF_COLOR);
 
     return addObj(objName, obj);
 }

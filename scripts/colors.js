@@ -20,6 +20,9 @@ function initColors() {
 
     document.getElementById("cr-color-max").onchange = () => crChangeColor(1.0);
     document.getElementById("cr-color-min").onchange = () => crChangeColor(0.0);
+
+    crChangeColor(1.0);
+    crChangeColor(0.0);
 }
 
 function colorRamp(t) {

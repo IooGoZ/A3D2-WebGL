@@ -969,7 +969,7 @@ class BoundingBox extends WireframeObject {
 // =====================================================
 
 class VolumeBox extends WireframeObject {
-	constructor(position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0, amplitude = 0.1) {
+	constructor(tex3D = ['raw/hnut512_uint.raw', 512, 512, 512], position = [0, 0, 0], rotation = [0, 0, 0], color = [1, 1, 1], x=-1, y=-1, z=0, dx=2.0, dy=2.0, dz=2.0, amplitude = 0.1) {
 		super(position, rotation, 'volume');
 		this.color = color;
 		this.amplitude = amplitude;
@@ -983,6 +983,12 @@ class VolumeBox extends WireframeObject {
 		this.mesh = {};
 		this.useTexture = true;
 		this.resolution = 512.0;
+		this.tex3D = {
+			url: tex3D[0],
+			sizex: tex3D[1],
+			sizey: tex3D[2],
+			sizez: tex3D[3]
+		}
 
 		this.initAll().then(() => {
 			loadShaders(this);
@@ -1054,7 +1060,7 @@ class VolumeBox extends WireframeObject {
 		// 	return data;
 		// });
 
-		this.mesh.volumeTexture = await loadRawFile('raw/hnut512_uint.raw', 512, 512, 512).then((data) => {
+		this.mesh.volumeTexture = await loadRawFile(this.tex3D.url, this.tex3D.sizex, this.tex3D.sizey, this.tex3D.sizez).then((data) => {
 			return data;
 		});
 	}
