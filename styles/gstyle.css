@@ -206,8 +206,12 @@ table#colors-ramp {
 table#colors-ramp > thead {
   color: #C7E0E8;
   background-color: #001F54;
-  border: 2px solid #C7E0E8;
 }
+
+table#colors-ramp > tbody {
+  overflow-y: scroll;
+}
+
 table#colors-ramp td, table#colors-ramp th {
   padding: 5px;
   border: 2px solid #1282A2;

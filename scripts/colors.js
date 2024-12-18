@@ -7,7 +7,7 @@ var cr_in_threshold = null;
 
 let colors = [
     [0.0, [0.78, 0.89, 0.91, 1.0]],
-    [1.0, [0.0, 1.0, 1.0, 1.0]]
+    [1.0, [1.0, 1.0, 1.0, 1.0]]
 ]
 
 function initColors() {
@@ -16,6 +16,10 @@ function initColors() {
     cr_body = document.getElementById("colors-ramp-body");
     cr_in_color = document.getElementById("cr-color-add");
     cr_in_threshold = document.getElementById("cr-threshold-add");
+    
+
+    document.getElementById("cr-color-max").onchange = () => crChangeColor(1.0);
+    document.getElementById("cr-color-min").onchange = () => crChangeColor(0.0);
 }
 
 function colorRamp(t) {
@@ -71,7 +75,7 @@ function addColor(index, color, threshold) {
     let inputColor = document.createElement("input");
     inputColor.type = "color";
     inputColor.value = color;
-    inputColor.id = `cr-color-${index}`;
+    inputColor.onchange = () => crChangeColor(threshold);
     tdColor.appendChild(inputColor);
 
     let tdThreshold = document.createElement("td");
@@ -81,13 +85,13 @@ function addColor(index, color, threshold) {
     inputThreshold.max = "0.99607843";
     inputThreshold.step = "0.00392157";
     inputThreshold.value = threshold;
-    inputThreshold.id = `cr-threshold-${index}`;
+    inputThreshold.disabled = true;
     tdThreshold.appendChild(inputThreshold);
 
     let tdButton = document.createElement("td");
     let button = document.createElement("button");
     button.textContent = "Delete";
-    button.onclick = () => removeColor(index);
+    button.onclick = () => removeColor(threshold);
     tdButton.appendChild(button);
 
     tr.appendChild(tdColor);
@@ -97,31 +101,33 @@ function addColor(index, color, threshold) {
     cr_body.insertBefore(tr, cr_body.children[index]);
 }
 
-function removeColor(index) {
-    let tr = document.getElementById(`cr-color-${index}`).parentNode.parentNode;
-    tr.remove();
-    colors.splice(index, 1);
-}
-
-function crChangeColor(index) {
-    let color = document.getElementById(`cr-color-${index}`).value;
-    colors[index][1] = hexToRgb(color);
-}
-
 function getIndexFromThreshold(threshold) {
-    let index = 0;
+    let index = -1;
     for (let i = 0; i < colors.length; i++) {
-        if (colors[i][0] < threshold) {
+        if (index == -1 || colors[i][0] < threshold) {
             index = i;
         }
     }
     return index;
 }
 
+function removeColor(threshold) {
+    let index = getIndexFromThreshold(threshold) + 1;
+    let tr = cr_body.children[index];
+    tr.remove();
+    colors.splice(index, 1);
+}
+
+function crChangeColor(threshold) {
+    let index = threshold == 0 ? 0 : getIndexFromThreshold(threshold) + 1;
+    let color = cr_body.children[index].children[0].children[0].value;
+    colors[index][1] = invertColor(hexToRgb(color));
+}
+
 function addColorToRamp() {
     let thresh = parseFloat(cr_in_threshold.value);
     let index = getIndexFromThreshold(thresh);
     let colorRGB = hexToRgb(cr_in_color.value);
-    colors.splice(index + 1, 0, [thresh, colorRGB]);
+    colors.splice(index + 1, 0, [thresh, invertColor(colorRGB)]);
     addColor(index+1, cr_in_color.value, thresh);
 }

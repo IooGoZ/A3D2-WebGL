@@ -110,6 +110,10 @@ function hexToRgb(hex) {
     ];
 }
 
+function invertColor(rgb) {
+    return rgb.map(c => 1 - c);
+}
+
 function rgbToLab(r, g, b) {
     // Helper function to convert RGB to XYZ
     function rgbToXyz(r, g, b) {
