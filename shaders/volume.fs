@@ -75,7 +75,7 @@ void main(void) {
         // Vérification des limites de la bounding box
         if (P.x < -1.0 || P.x > 1.0 || P.y < -1.0 || P.y > 1.0 || P.z < 0.0 || P.z > 2.0) {
             float intensity = finalColor.r + finalColor.g + finalColor.b;
-            if (intensity > uMinThreshold/3.0) {
+            if (intensity > uMinThreshold) {
                 break;
             } else {
                 discard;
@@ -85,7 +85,7 @@ void main(void) {
         float grayLvl = getGrayLevel(P);
         if (grayLvl > uMinThreshold) {
             //finalColor += uTransfertColor[int(((grayLvl-uMinThreshold)/(uMaxThreshold-uMinThreshold))*255.0)];
-            finalColor += uTransfertColor[int(grayLvl * 255.0)];
+            finalColor = mix(finalColor, uTransfertColor[int(grayLvl * 255.0)], grayLvl);
             if (grayLvl > uMaxThreshold) {
                 hit = true;
                 break;
@@ -111,11 +111,14 @@ void main(void) {
     }
 
     // Si on a pas touché la surface, on discard
-    if (!hit) {
-        vec4 col = finalColor;
-        fragColor = vec4(col.rgb, 1.0);
-        // discard;
-    } else {
-        fragColor = vec4(finalColor.rgb, 1.0);
-    }
+    // if (!hit) {
+    //     vec4 col = uClearColor - finalColor;
+    //     fragColor = vec4(col.rgb, 1.0);
+    //     // discard;
+    // } else {
+    //     fragColor = vec4(finalColor.rgb, 1.0);
+    // }
+
+    vec4 col = uClearColor - finalColor;
+    fragColor = vec4(col.rgb, 1.0);
 }
