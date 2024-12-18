@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAW to Image</title>
+</head>
+<body>
+    <h1>Visualisation des tranches RAW</h1>
+    <div id="images-container" style="display: flex; flex-wrap: wrap;"></div>
+
+    <script>
+        async function loadRawImages(url) {
+            const size = 512; // Dimensions de la matrice (512x512x512)
+            
+            // Télécharger le fichier RAW
+            const response = await fetch(url);
+            const buffer = await response.arrayBuffer();
+            const data = new Uint8Array(buffer);
+
+            // Fonction pour convertir une tranche en Image
+            async function sliceToImage(sliceData) {
+                return new Promise((resolve) => {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = size;
+                    canvas.height = size;
+                    const ctx = canvas.getContext('2d');
+                    const imageData = ctx.createImageData(size, size);
+
+                    // Remplir l'image avec les données de la tranche
+                    for (let i = 0; i < sliceData.length; i++) {
+                        const value = sliceData[i]; // Intensité (uint8)
+                        const idx = i * 4;         // Index RGBA
+                        imageData.data[idx] = value;     // Rouge
+                        imageData.data[idx + 1] = value; // Vert
+                        imageData.data[idx + 2] = value; // Bleu
+                        imageData.data[idx + 3] = 255;   // Alpha (opaque)
+                    }
+
+                    // Dessiner l'image et la convertir en un objet Image
+                    ctx.putImageData(imageData, 0, 0);
+                    const img = new Image();
+                    img.onload = () => resolve(img);
+                    img.src = canvas.toDataURL(); // Convertit en base64 PNG
+                });
+            }
+
+            // Extraire chaque tranche et convertir en Image
+            const images = [];
+            for (let z = 0; z < size; z++) {
+                const sliceStart = z * size * size;
+                const sliceEnd = sliceStart + size * size;
+                const sliceData = data.subarray(sliceStart, sliceEnd);
+                images.push(await sliceToImage(sliceData));
+            }
+
+            return images; // Tableau d'instances d'Image
+        }
+
+        // Exemple d'utilisation
+        document.addEventListener('DOMContentLoaded', () => {
+            const imagesContainer = document.getElementById('images-container');
+            const rawFileUrl = 'raw/hnut512_uint.raw'; // Remplacez par l'URL de votre fichier RAW
+
+            loadRawImages(rawFileUrl).then(images => {
+                images.forEach((img, index) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.margin = '5px';
+                    wrapper.appendChild(img);
+                    imagesContainer.appendChild(wrapper);
+                    console.log(`Image ${index} prête`);
+                });
+            }).catch(error => {
+                console.error('Erreur lors du chargement des images:', error);
+            });
+        });
+    </script>
+</body>
+</html>
+
+J'ai un projet webGL avec du JS et des shader en version 300 es. Tu es un expert en algorithmie 3D, je te pose des questions et tu y réponds de façons claires et précises. Tu n'hésites pas à me reprendre et à me corriger si je me trompe. De plus tu dois me répondre non, si la réponse à ma question est négative.

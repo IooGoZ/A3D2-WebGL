@@ -40,10 +40,14 @@ function initSelector() {
     textureElem = document.getElementById("texture");
     normalElem = document.getElementById("normal");
     amplElem = document.getElementById("amplitude");
+    resolutionElem = document.getElementById("resolution");
 
     // Charger le système de heightmap
     initHeightmap();
 
+    // Charger le système de colorsRamp
+    initColors();
+    
     // Ajout des objets de la scène
     addObj("Plane", new plane());
     obj = addMeshObj('porsche.obj');
@@ -128,6 +132,15 @@ function select(obj) {
         amplElem.value = 1;
         amplElem.disabled = true;
     }
+
+    try {
+        resolutionElem.value = obj.getResolution();
+        resolutionElem.disabled = false;
+    } catch (e) {
+        resolutionElem.value = 512.0;
+        resolutionElem.disabled = true;
+    }
+
 }
 
 // =====================================================
@@ -163,6 +176,13 @@ function addHeightmapObj(objName="Heightmap") {
 // =====================================================
 function addBoundingBox(objName="BoundingBox") {
     const obj = new BoundingBox(DEF_POSITION, DEF_ROTATION, DEF_COLOR);
+
+    return addObj(objName, obj);
+}
+
+// =====================================================
+function addVolumeBox(objName="VolumeBox") {
+    const obj = new VolumeBox(DEF_POSITION, DEF_ROTATION, DEF_COLOR);
 
     return addObj(objName, obj);
 }
@@ -218,6 +238,16 @@ function changeColor() {
 	COLOR = vec3.create([colR, colG, colB]);
 
 	selectedObject.setColor(COLOR);
+}
+
+// =====================================================
+function changeResolution() {
+    try {
+        var resValue = parseFloat(resolutionElem.value);
+        selectedObject.setResolution(resValue);
+    } catch (e) {
+        resolutionElem.disabled = true;
+    }
 }
 
 // =====================================================

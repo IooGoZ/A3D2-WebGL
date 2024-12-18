@@ -1,11 +1,11 @@
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
   font-size: 16px;
   line-height: 1.5;
   margin: 0;
   padding: 0;
-  background: white;
-  color: black;
+  background: #0A1128;
+  color: #C7E0E8;
   display: inline-flex;
   width: 100vw;
   height: 100vh;
@@ -19,6 +19,81 @@ th {
 td {
   text-align: center;
   justify-content: center;
+}
+
+input {
+  display: inline-block;
+  border: 2px solid #1282A2;
+  border-radius: 5px;
+  box-sizing: border-box;
+  background-color: #001F54;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+}
+
+input:disabled {
+  opacity: 0.5;
+}
+
+input[type="range"]::-moz-range-progress {
+  background-color: #1282A2;
+}
+
+input[type="range"]::-moz-range-thumb {
+  background-color: #C7E0E8;
+}
+
+input[type="range"]::-moz-range-thumb:active {
+  background-color: #001F54;
+}
+
+input[type="range"]::-moz-range-thumb:hover {
+  background-color: #1282A2;
+}
+
+input[type="range"]::-moz-range-track{
+  background-color: #001F54;
+}
+
+button {
+  display: inline-block;
+  border: 2px solid #86BECF;
+  border-radius: 5px;
+  box-sizing: border-box;
+  background-color: #001F54;
+  color: #86BECF;
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  font-weight: 900;
+  font-size: 14px;
+  padding: 4px 5px;
+}
+
+button:active {
+  background-color: #C7E0E8;
+  color: #1282A2;
+}
+
+button:disabled {
+  opacity: 0.5;
+}
+
+select {
+  display: inline-block;
+  border: 2px solid #1282A2;
+  border-radius: 5px;
+  box-sizing: border-box;
+  background-color: #001F54;
+  color: #C7E0E8;
+}
+
+select option {
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  background-color: #001F54;
+  color: #C7E0E8;
+}
+
+select option:checked {
+  background-color: #1282A2;
+  color: #C7E0E8;
 }
 
 .container {
@@ -89,6 +164,8 @@ td {
   transform: scale(0.75);
   max-width: 100%;
   max-height: 100%;
+  border: 2px solid #1282A2;
+  border-radius: 10px;
 }
 
 #WebGL-test {
@@ -98,4 +175,46 @@ td {
   left: 50%;
   transform: translateX(-50%);
   position: relative;
+  border: 12px solid #1282A2;
+  border-radius: 5px;
+}
+
+#objects-selector {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+#objects-selector button {
+  margin: 5px 0;
+}
+
+#hm-right-part {
+  display: inline-flex;
+}
+
+#hm-right-part > div {
+  flex: 1;
+}
+
+table#colors-ramp {
+  width: 80%;
+  border-collapse: collapse;
+  border: 2px solid #1282A2;
+}
+
+table#colors-ramp > thead {
+  color: #C7E0E8;
+  background-color: #001F54;
+}
+
+table#colors-ramp > tbody {
+  overflow-y: scroll;
+}
+
+table#colors-ramp td, table#colors-ramp th {
+  padding: 5px;
+  border: 2px solid #1282A2;
+  text-align: center;
+  justify-content: center;
 }
