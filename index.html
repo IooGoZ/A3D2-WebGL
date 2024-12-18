@@ -245,15 +245,6 @@
 							</tbody>
 						</table>
 					</div>
-
-					<div class="container">
-						<h3 class="content"> Textures d'objet : </h3>
-						<div id="textures-selector"> 
-							<button onclick="addVolumeBox()"> Noisette </button>
-							<br/>
-							<button onclick="addVolumeBox()"> Cerveaux </button>
-						</div>
-					</div>
 				</div>
 
 				
@@ -274,7 +265,8 @@
 					<button onclick="addMeshObj('sphere.obj')">Sphere</button>
 					<button onclick="addHeightmapObj()">Heightmap</button>
 					<button onclick="addBoundingBox()">BoundingBox</button>
-					<button onclick="addVolumeBox()">VolumeBox</button>
+					<button onclick="addVolumeBox('raw/noisette.raw', 512, 512, 512 , 'VolumeBox Noisette')">VolumeBox Noisette</button>
+					<button onclick="addVolumeBox('raw/cerveau.raw', 704, 704, 208 , 'VolumeBox Cerveau')">VolumeBox Cerveau</button>
 				</div>
 			</div>
 		</div>
